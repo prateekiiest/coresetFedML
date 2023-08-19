@@ -1,0 +1,49 @@
+================================================================================
+Summary of training process:
+Algorithm: pFedBayes
+Batch size: 100
+Learing rate       : 0.001
+Average Moving       : 1.0
+Subset of users      : 2
+Number of global rounds       : 3
+Number of local rounds       : 2
+Dataset       : ChestMnist
+Local Model       : pbnn
+================================================================================
+---------------Running time:------------ 0
+clients initializting...
+Number of users / total users: 2  /  2
+Finished creating FedAvg server.
+-------------Round number:  0  -------------
+TEsted
+TEsted
+TEsted
+TEsted
+TEsted
+TEsted
+TEsted
+TEsted
+TEsted
+TEsted
+Average personal Accurancy:  0.100425
+Average Global Accurancy:  0.100375
+Average Global Training Accurancy:  0.0964
+Average Global Training Loss:  4527.167721557617
+All users are selected
+-------------Round number:  1  -------------
+TEsted
+TEsted
+TEsted
+TEsted
+TEsted
+TEsted
+TEsted
+TEsted
+TEsted
+TEsted
+Average personal Accurancy:  0.6741
+Average Global Accurancy:  0.46175
+Average Global Training Accurancy:  0.6972
+Average Global Training Loss:  5115.298580932617
+All users are selected
+-------------Round number:  2  -------------
