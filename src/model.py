@@ -19,6 +19,7 @@ class federatedBNN(nn.Module):
         self.mean_prior = 10
         self.sigma_prior = 5
         self.layer_param_shapes = self.get_layer_param_shapes()
+        self.coresets_weights = 0
         self.mus = nn.ParameterList()
         self.coreset_mus = nn.ParameterList()
         self.rhos = nn.ParameterList()

@@ -16,7 +16,7 @@ class ClientModelClass(Client):
         self.personal_learning_rate = personal_learning_rate
         self.optimizer1 = torch.optim.Adam(self.personal_model.parameters(), lr=self.personal_learning_rate)
         self.optimizer2 = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
-
+        self.coreset_optimizer =torch.optim.Adam(self.model.coreset_weights(),lr=self.personal_learning_rate)
     def set_grads(self, new_grads):
         if isinstance(new_grads, nn.Parameter):
             for model_grad, new_grad in zip(self.model.parameters(), new_grads):
@@ -104,7 +104,10 @@ class ClientModelClass(Client):
         # the coreset loss and original loss. For each client will have a weight vector
         # K_L_q_q_w = sum([torch.sum(kl_divergence(Normal(mus_local[i], sigmas_local[i]),  Normal(mus_local_coreset[i].detach(), sigmas_local_coreset[i].detach()))) for i in range(len(params))])
 
-        
+        # K_L_q_q_w.backward()
+        self.coreset_optimizer.zero_grad()
+        K_L_q_q_w.backward()
+        self.coreset_optimizer.step()
         ###########
 
         return LOSS
