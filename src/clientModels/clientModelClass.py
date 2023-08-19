@@ -32,6 +32,9 @@ class ClientModelClass(Client):
         self.model.train()
         self.personal_model.train()
 
+        # for epoch in range(1, corset_epochs  + 1):
+        ##  initialize some weight vector w
+        ##  w to be used for training
         for epoch in range(1, self.local_epochs + 1):
 
             X, Y = self.get_next_train_batch()
@@ -93,5 +96,15 @@ class ClientModelClass(Client):
             model_loss.backward()
             model_loss_coreset.backward()
             self.optimizer2.step()
+            
+            
+        ########### 
+        
+        # at the end of for loop we will have the optimal loss for both 
+        # the coreset loss and original loss. For each client will have a weight vector
+        # K_L_q_q_w = sum([torch.sum(kl_divergence(Normal(mus_local[i], sigmas_local[i]),  Normal(mus_local_coreset[i].detach(), sigmas_local_coreset[i].detach()))) for i in range(len(params))])
+
+        
+        ###########
 
         return LOSS

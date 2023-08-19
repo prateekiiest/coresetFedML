@@ -1,1 +1,4 @@
 data/*
+MNIST/*
+train/*
+test/*
