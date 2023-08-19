@@ -1,0 +1,480 @@
+================================================================================
+Summary of training process:
+Algorithm: pFedBayes
+Batch size: 100
+Learing rate       : 0.001
+Average Moving       : 1.0
+Subset of users      : 10
+Number of global rounds       : 800
+Number of local rounds       : 20
+Dataset       : Mnist
+Local Model       : pbnn
+================================================================================
+---------------Running time:------------ 0
+train data dist:
+ [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000]
+clients initializting...
+Number of users / total users: 10  /  10
+Finished creating FedAvg server.
+-------------Round number:  0  -------------
+Average personal Accurancy:  0.100425
+Average Global Accurancy:  0.100375
+Average Global Training Accurancy:  0.0964
+Average Global Training Loss:  4527.167721557617
+All users are selected
+-------------Round number:  1  -------------
+Average personal Accurancy:  0.8741
+Average Global Accurancy:  0.46175
+Average Global Training Accurancy:  0.8972
+Average Global Training Loss:  5115.298580932617
+All users are selected
+-------------Round number:  2  -------------
+Average personal Accurancy:  0.896825
+Average Global Accurancy:  0.640425
+Average Global Training Accurancy:  0.9224
+Average Global Training Loss:  1716.587190246582
+All users are selected
+-------------Round number:  3  -------------
+Average personal Accurancy:  0.908425
+Average Global Accurancy:  0.73595
+Average Global Training Accurancy:  0.9348
+Average Global Training Loss:  1134.3453720092773
+All users are selected
+-------------Round number:  4  -------------
+Average personal Accurancy:  0.91475
+Average Global Accurancy:  0.770325
+Average Global Training Accurancy:  0.9434
+Average Global Training Loss:  935.7894653320312
+All users are selected
+-------------Round number:  5  -------------
+Average personal Accurancy:  0.920075
+Average Global Accurancy:  0.7891
+Average Global Training Accurancy:  0.9501
+Average Global Training Loss:  841.3718994140625
+All users are selected
+-------------Round number:  6  -------------
+Average personal Accurancy:  0.9235
+Average Global Accurancy:  0.803025
+Average Global Training Accurancy:  0.9536
+Average Global Training Loss:  793.4857757568359
+All users are selected
+-------------Round number:  7  -------------
+Average personal Accurancy:  0.926
+Average Global Accurancy:  0.814625
+Average Global Training Accurancy:  0.9561
+Average Global Training Loss:  774.6002746582031
+All users are selected
+-------------Round number:  8  -------------
+Average personal Accurancy:  0.928225
+Average Global Accurancy:  0.8226
+Average Global Training Accurancy:  0.9587
+Average Global Training Loss:  757.8607109069824
+All users are selected
+-------------Round number:  9  -------------
+Average personal Accurancy:  0.931675
+Average Global Accurancy:  0.830625
+Average Global Training Accurancy:  0.9608
+Average Global Training Loss:  734.4483280181885
+All users are selected
+-------------Round number:  10  -------------
+Average personal Accurancy:  0.932875
+Average Global Accurancy:  0.836325
+Average Global Training Accurancy:  0.9624
+Average Global Training Loss:  721.4513957977294
+All users are selected
+-------------Round number:  11  -------------
+Average personal Accurancy:  0.935025
+Average Global Accurancy:  0.84035
+Average Global Training Accurancy:  0.9645
+Average Global Training Loss:  705.2650485992432
+All users are selected
+-------------Round number:  12  -------------
+Average personal Accurancy:  0.936125
+Average Global Accurancy:  0.844825
+Average Global Training Accurancy:  0.966
+Average Global Training Loss:  698.9006065368652
+All users are selected
+-------------Round number:  13  -------------
+Average personal Accurancy:  0.9384
+Average Global Accurancy:  0.84805
+Average Global Training Accurancy:  0.9684
+Average Global Training Loss:  692.8650638580323
+All users are selected
+-------------Round number:  14  -------------
+Average personal Accurancy:  0.938925
+Average Global Accurancy:  0.85235
+Average Global Training Accurancy:  0.9697
+Average Global Training Loss:  690.8248435974122
+All users are selected
+-------------Round number:  15  -------------
+Average personal Accurancy:  0.941025
+Average Global Accurancy:  0.855025
+Average Global Training Accurancy:  0.9725
+Average Global Training Loss:  672.2977771759033
+All users are selected
+-------------Round number:  16  -------------
+Average personal Accurancy:  0.94135
+Average Global Accurancy:  0.857675
+Average Global Training Accurancy:  0.9733
+Average Global Training Loss:  648.4370800018311
+All users are selected
+-------------Round number:  17  -------------
+Average personal Accurancy:  0.942925
+Average Global Accurancy:  0.860775
+Average Global Training Accurancy:  0.9749
+Average Global Training Loss:  621.6040218353271
+All users are selected
+-------------Round number:  18  -------------
+Average personal Accurancy:  0.944125
+Average Global Accurancy:  0.8635
+Average Global Training Accurancy:  0.9762
+Average Global Training Loss:  599.349367904663
+All users are selected
+-------------Round number:  19  -------------
+Average personal Accurancy:  0.9458
+Average Global Accurancy:  0.866025
+Average Global Training Accurancy:  0.978
+Average Global Training Loss:  574.564189529419
+All users are selected
+-------------Round number:  20  -------------
+Average personal Accurancy:  0.946275
+Average Global Accurancy:  0.868075
+Average Global Training Accurancy:  0.9791
+Average Global Training Loss:  550.6823474884034
+All users are selected
+-------------Round number:  21  -------------
+Average personal Accurancy:  0.9474
+Average Global Accurancy:  0.8697
+Average Global Training Accurancy:  0.9804
+Average Global Training Loss:  529.3056980133057
+All users are selected
+-------------Round number:  22  -------------
+Average personal Accurancy:  0.9483
+Average Global Accurancy:  0.871525
+Average Global Training Accurancy:  0.9815
+Average Global Training Loss:  514.2726928710938
+All users are selected
+-------------Round number:  23  -------------
+Average personal Accurancy:  0.948825
+Average Global Accurancy:  0.873375
+Average Global Training Accurancy:  0.9825
+Average Global Training Loss:  505.1658573150635
+All users are selected
+-------------Round number:  24  -------------
+Average personal Accurancy:  0.94965
+Average Global Accurancy:  0.87505
+Average Global Training Accurancy:  0.9833
+Average Global Training Loss:  497.8515228271484
+All users are selected
+-------------Round number:  25  -------------
+Average personal Accurancy:  0.9498
+Average Global Accurancy:  0.8764
+Average Global Training Accurancy:  0.9835
+Average Global Training Loss:  490.1343193054199
+All users are selected
+-------------Round number:  26  -------------
+Average personal Accurancy:  0.95055
+Average Global Accurancy:  0.8775
+Average Global Training Accurancy:  0.9843
+Average Global Training Loss:  475.3449151992798
+All users are selected
+-------------Round number:  27  -------------
+Average personal Accurancy:  0.950975
+Average Global Accurancy:  0.87855
+Average Global Training Accurancy:  0.9851
+Average Global Training Loss:  463.5704179763794
+All users are selected
+-------------Round number:  28  -------------
+Average personal Accurancy:  0.95175
+Average Global Accurancy:  0.879225
+Average Global Training Accurancy:  0.9865
+Average Global Training Loss:  449.3278621673584
+All users are selected
+-------------Round number:  29  -------------
+Average personal Accurancy:  0.951875
+Average Global Accurancy:  0.87985
+Average Global Training Accurancy:  0.9876
+Average Global Training Loss:  441.07536735534666
+All users are selected
+-------------Round number:  30  -------------
+Average personal Accurancy:  0.952675
+Average Global Accurancy:  0.881425
+Average Global Training Accurancy:  0.9885
+Average Global Training Loss:  428.23314933776857
+All users are selected
+-------------Round number:  31  -------------
+Average personal Accurancy:  0.952425
+Average Global Accurancy:  0.88225
+Average Global Training Accurancy:  0.9889
+Average Global Training Loss:  420.56611213684084
+All users are selected
+-------------Round number:  32  -------------
+Average personal Accurancy:  0.95345
+Average Global Accurancy:  0.88365
+Average Global Training Accurancy:  0.9893
+Average Global Training Loss:  407.82564754486083
+All users are selected
+-------------Round number:  33  -------------
+Average personal Accurancy:  0.9532
+Average Global Accurancy:  0.8841
+Average Global Training Accurancy:  0.99
+Average Global Training Loss:  399.15026302337645
+All users are selected
+-------------Round number:  34  -------------
+Average personal Accurancy:  0.953625
+Average Global Accurancy:  0.88545
+Average Global Training Accurancy:  0.99
+Average Global Training Loss:  386.31477108001707
+All users are selected
+-------------Round number:  35  -------------
+Average personal Accurancy:  0.95345
+Average Global Accurancy:  0.8862
+Average Global Training Accurancy:  0.9906
+Average Global Training Loss:  379.30517997741697
+All users are selected
+-------------Round number:  36  -------------
+Average personal Accurancy:  0.95395
+Average Global Accurancy:  0.887425
+Average Global Training Accurancy:  0.9912
+Average Global Training Loss:  367.42379360198976
+All users are selected
+-------------Round number:  37  -------------
+Average personal Accurancy:  0.9541
+Average Global Accurancy:  0.88765
+Average Global Training Accurancy:  0.9917
+Average Global Training Loss:  361.34890327453616
+All users are selected
+-------------Round number:  38  -------------
+Average personal Accurancy:  0.954575
+Average Global Accurancy:  0.888225
+Average Global Training Accurancy:  0.9923
+Average Global Training Loss:  349.00515975952146
+All users are selected
+-------------Round number:  39  -------------
+Average personal Accurancy:  0.95505
+Average Global Accurancy:  0.888675
+Average Global Training Accurancy:  0.9927
+Average Global Training Loss:  339.25717334747316
+All users are selected
+-------------Round number:  40  -------------
+Average personal Accurancy:  0.95535
+Average Global Accurancy:  0.889125
+Average Global Training Accurancy:  0.9925
+Average Global Training Loss:  327.7398403167725
+All users are selected
+-------------Round number:  41  -------------
+Average personal Accurancy:  0.956
+Average Global Accurancy:  0.88975
+Average Global Training Accurancy:  0.9927
+Average Global Training Loss:  320.00844688415526
+All users are selected
+-------------Round number:  42  -------------
+Average personal Accurancy:  0.956325
+Average Global Accurancy:  0.8902
+Average Global Training Accurancy:  0.9932
+Average Global Training Loss:  310.23348293304446
+All users are selected
+-------------Round number:  43  -------------
+Average personal Accurancy:  0.9566
+Average Global Accurancy:  0.8908
+Average Global Training Accurancy:  0.9931
+Average Global Training Loss:  305.36378440856936
+All users are selected
+-------------Round number:  44  -------------
+Average personal Accurancy:  0.957225
+Average Global Accurancy:  0.891425
+Average Global Training Accurancy:  0.9936
+Average Global Training Loss:  296.79379043579104
+All users are selected
+-------------Round number:  45  -------------
+Average personal Accurancy:  0.9574
+Average Global Accurancy:  0.891775
+Average Global Training Accurancy:  0.9935
+Average Global Training Loss:  291.2713399887085
+All users are selected
+-------------Round number:  46  -------------
+Average personal Accurancy:  0.95775
+Average Global Accurancy:  0.892325
+Average Global Training Accurancy:  0.9942
+Average Global Training Loss:  281.167621421814
+All users are selected
+-------------Round number:  47  -------------
+Average personal Accurancy:  0.9581
+Average Global Accurancy:  0.892575
+Average Global Training Accurancy:  0.9942
+Average Global Training Loss:  275.5174591064453
+All users are selected
+-------------Round number:  48  -------------
+Average personal Accurancy:  0.958475
+Average Global Accurancy:  0.89355
+Average Global Training Accurancy:  0.9945
+Average Global Training Loss:  266.8844968795776
+All users are selected
+-------------Round number:  49  -------------
+Average personal Accurancy:  0.95895
+Average Global Accurancy:  0.893725
+Average Global Training Accurancy:  0.9944
+Average Global Training Loss:  261.8841794967651
+All users are selected
+-------------Round number:  50  -------------
+Average personal Accurancy:  0.9587
+Average Global Accurancy:  0.89425
+Average Global Training Accurancy:  0.9945
+Average Global Training Loss:  255.26731719970704
+All users are selected
+-------------Round number:  51  -------------
+Average personal Accurancy:  0.95965
+Average Global Accurancy:  0.8946
+Average Global Training Accurancy:  0.9945
+Average Global Training Loss:  250.57199268341066
+All users are selected
+-------------Round number:  52  -------------
+Average personal Accurancy:  0.9595
+Average Global Accurancy:  0.8947
+Average Global Training Accurancy:  0.9945
+Average Global Training Loss:  243.58778457641603
+All users are selected
+-------------Round number:  53  -------------
+Average personal Accurancy:  0.959875
+Average Global Accurancy:  0.895325
+Average Global Training Accurancy:  0.9947
+Average Global Training Loss:  240.35354804992676
+All users are selected
+-------------Round number:  54  -------------
+Average personal Accurancy:  0.960175
+Average Global Accurancy:  0.895375
+Average Global Training Accurancy:  0.9949
+Average Global Training Loss:  234.0701467514038
+All users are selected
+-------------Round number:  55  -------------
+Average personal Accurancy:  0.9599
+Average Global Accurancy:  0.896075
+Average Global Training Accurancy:  0.9948
+Average Global Training Loss:  231.02568492889404
+All users are selected
+-------------Round number:  56  -------------
+Average personal Accurancy:  0.96035
+Average Global Accurancy:  0.8967
+Average Global Training Accurancy:  0.9952
+Average Global Training Loss:  225.7461603164673
+All users are selected
+-------------Round number:  57  -------------
+Average personal Accurancy:  0.960125
+Average Global Accurancy:  0.896625
+Average Global Training Accurancy:  0.9951
+Average Global Training Loss:  222.08845310211183
+All users are selected
+-------------Round number:  58  -------------
+Average personal Accurancy:  0.960475
+Average Global Accurancy:  0.89685
+Average Global Training Accurancy:  0.9958
+Average Global Training Loss:  216.26990747451782
+All users are selected
+-------------Round number:  59  -------------
+Average personal Accurancy:  0.960825
+Average Global Accurancy:  0.897275
+Average Global Training Accurancy:  0.9959
+Average Global Training Loss:  212.37945957183837
+All users are selected
+-------------Round number:  60  -------------
+Average personal Accurancy:  0.9608
+Average Global Accurancy:  0.897625
+Average Global Training Accurancy:  0.9958
+Average Global Training Loss:  207.77391233444214
+All users are selected
+-------------Round number:  61  -------------
+Average personal Accurancy:  0.960975
+Average Global Accurancy:  0.897775
+Average Global Training Accurancy:  0.9963
+Average Global Training Loss:  205.32147789001465
+All users are selected
+-------------Round number:  62  -------------
+Average personal Accurancy:  0.9614
+Average Global Accurancy:  0.8981
+Average Global Training Accurancy:  0.9963
+Average Global Training Loss:  200.76669073104858
+All users are selected
+-------------Round number:  63  -------------
+Average personal Accurancy:  0.96135
+Average Global Accurancy:  0.8987
+Average Global Training Accurancy:  0.9967
+Average Global Training Loss:  199.08660621643065
+All users are selected
+-------------Round number:  64  -------------
+Average personal Accurancy:  0.96175
+Average Global Accurancy:  0.89915
+Average Global Training Accurancy:  0.9966
+Average Global Training Loss:  194.60726766586305
+All users are selected
+-------------Round number:  65  -------------
+Average personal Accurancy:  0.961775
+Average Global Accurancy:  0.89955
+Average Global Training Accurancy:  0.9971
+Average Global Training Loss:  192.30321807861327
+All users are selected
+-------------Round number:  66  -------------
+Average personal Accurancy:  0.962225
+Average Global Accurancy:  0.899775
+Average Global Training Accurancy:  0.997
+Average Global Training Loss:  188.22432041168213
+All users are selected
+-------------Round number:  67  -------------
+Average personal Accurancy:  0.961825
+Average Global Accurancy:  0.900275
+Average Global Training Accurancy:  0.9974
+Average Global Training Loss:  186.09678344726564
+All users are selected
+-------------Round number:  68  -------------
+Average personal Accurancy:  0.962525
+Average Global Accurancy:  0.9005
+Average Global Training Accurancy:  0.9972
+Average Global Training Loss:  182.22781467437744
+All users are selected
+-------------Round number:  69  -------------
+Average personal Accurancy:  0.9622
+Average Global Accurancy:  0.90155
+Average Global Training Accurancy:  0.9976
+Average Global Training Loss:  179.5559615135193
+All users are selected
+-------------Round number:  70  -------------
+Average personal Accurancy:  0.9629
+Average Global Accurancy:  0.90135
+Average Global Training Accurancy:  0.9975
+Average Global Training Loss:  176.65487823486328
+All users are selected
+-------------Round number:  71  -------------
+Average personal Accurancy:  0.962725
+Average Global Accurancy:  0.902425
+Average Global Training Accurancy:  0.9981
+Average Global Training Loss:  174.4660701751709
+All users are selected
+-------------Round number:  72  -------------
+Average personal Accurancy:  0.963125
+Average Global Accurancy:  0.90185
+Average Global Training Accurancy:  0.9978
+Average Global Training Loss:  172.32125482559204
+All users are selected
+-------------Round number:  73  -------------
+Average personal Accurancy:  0.96285
+Average Global Accurancy:  0.902825
+Average Global Training Accurancy:  0.9982
+Average Global Training Loss:  172.34372262954713
+All users are selected
+-------------Round number:  74  -------------
+Average personal Accurancy:  0.963625
+Average Global Accurancy:  0.9028
+Average Global Training Accurancy:  0.998
+Average Global Training Loss:  171.88952121734619
+All users are selected
+-------------Round number:  75  -------------
+Average personal Accurancy:  0.96315
+Average Global Accurancy:  0.903125
+Average Global Training Accurancy:  0.9985
+Average Global Training Loss:  174.51066064834595
+All users are selected
+-------------Round number:  76  -------------
+Average personal Accurancy:  0.963725
+Average Global Accurancy:  0.903075
+Average Global Training Accurancy:  0.9983
+Average Global Training Loss:  174.43851718902587
+All users are selected
