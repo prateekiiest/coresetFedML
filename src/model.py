@@ -29,13 +29,21 @@ class federatedBNN(nn.Module):
         self.zeta = torch.tensor(zeta, device=self.device)
         self.sigmas = torch.tensor(
             [1.] * len(self.layer_param_shapes), device=self.device)
-
+        self.coreset_sigmas = torch.tensor(
+            [1.] * len(self.layer_param_shapes), device=self.device)
+        
         for shape in self.layer_param_shapes:
             mu = nn.Parameter(torch.normal(mean=torch.zeros(
                 shape), std=self.weight_scale * torch.ones(shape)))
             rho = nn.Parameter(self.rho_offset + torch.zeros(shape))
             self.mus.append(mu)
             self.rhos.append(rho)
+            
+            coreset_mu = nn.Parameter(torch.normal(mean=torch.zeros(
+                shape), std=self.weight_scale * torch.ones(shape)))
+            coreset_rho = nn.Parameter(self.rho_offset + torch.zeros(shape))
+            self.coreset_mus.append(coreset_mu)
+            self.coreset_rhos.append(coreset_rho)
 
     def get_layer_param_shapes(self):
         layer_param_shapes = []
@@ -82,7 +90,6 @@ class federatedBNN(nn.Module):
             h_linear = torch.mm(
                 layer_input, layer_params[2 * i]) + layer_params[2 * i + 1]
             layer_input = F.relu(h_linear)
-
         output = torch.mm(layer_input, layer_params[-2]) + layer_params[-1]
         return output
 
