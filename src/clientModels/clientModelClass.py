@@ -21,7 +21,7 @@ class ClientModelClass(Client):
         self.optimizer3 = torch.optim.Adam(
             self.model.parameters(), lr=self.learning_rate)
         self.coreset_optimizer = torch.optim.Adam(
-            self.model.coreset_weights(), lr=self.personal_learning_rate)
+            self.model.parameters(), lr=self.personal_learning_rate)
 
     def set_grads(self, new_grads):
         if isinstance(new_grads, nn.Parameter):
