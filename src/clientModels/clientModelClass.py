@@ -4,6 +4,7 @@ from src.model import *
 from src.clientModels.clientBaseClass import Client
 import numpy as np
 
+torch.autograd.set_detect_anomaly(True)
 class ClientModelClass(Client):
     def __init__(self, numeric_id, train_data, test_data, model, batch_size, learning_rate, beta, lamda,
                  local_epochs, optimizer, personal_learning_rate, device, output_dim=10):
@@ -15,6 +16,8 @@ class ClientModelClass(Client):
         self.N_Batch = len(train_data) // batch_size
         self.personal_learning_rate = personal_learning_rate
         self.optimizer1 = torch.optim.Adam(
+            self.personal_model.parameters(), lr=self.personal_learning_rate)
+        self.optimizer11 = torch.optim.Adam(
             self.personal_model.parameters(), lr=self.personal_learning_rate)
         self.optimizer2 = torch.optim.Adam(
             self.model.parameters(), lr=self.learning_rate)
@@ -55,11 +58,17 @@ class ClientModelClass(Client):
 
                 batch_X = Variable(X.view(self.batch_size, -1))
                 
+                #print("Batch X", batch_X)
                 
+                #print("\n")
+                
+
                 
                 batch_X_coreset = true_w.T@(batch_X)
                 #X_coreset = 
+                #print("Batch X Coreset", batch_X_coreset)
                 
+                #print("\n")                
                 #print("===================\n")
                 #print("Batch coreset", batch_X_coreset)
                 #print("===================\n")
@@ -103,9 +112,13 @@ class ClientModelClass(Client):
                     )
 
                     self.optimizer1.zero_grad()
-                    personal_loss.backward()
-                    personal_loss_coreset.backward(retain_graph=True)
+                    personal_loss.backward(retain_graph=True)
                     self.optimizer1.step()
+
+                    self.optimizer11.zero_grad()
+                    personal_loss_coreset.backward(retain_graph=True)
+
+                    self.optimizer11.step()
 
                 # local model
                 epsilons = self.model.sample_epsilons(
@@ -137,21 +150,37 @@ class ClientModelClass(Client):
                 self.optimizer2.zero_grad()
                 model_loss.backward(retain_graph=True)
 
+                self.optimizer3.zero_grad()
+
                 model_loss_coreset.backward(retain_graph=True)
                 self.optimizer2.step()
+
+                self.optimizer3.step()
 
             ###########
 
             # at the end of for loop we will have the optimal loss for both
             # the coreset loss and original loss. For each client will have a weight vector
-            K_L_q_q_w = sum([torch.sum(kl_divergence(Normal(self.personal_model.mus[i], self.personal_model.sigmas[i]),
-                                                    Normal([t.clone()
-                    for t in self.personal_model.coreset_mus], [t.clone()
-                    for t in self.personal_model.coreset_sigmas]))) for i in range(len(layer_params1_coreset))])
+            
+            print("\n")
+          
+            print("\n")
 
+            #K_L_q_q_w = torch.sum(kl_divergence(Normal([t.clone().detach()
+             #       for t in self.personal_model.mus], [t.clone().detach()
+              #      for t in self.personal_model.sigmas]),
+               #                                     Normal([t.clone().detach()
+                #    for t in self.personal_model.coreset_mus], [t.clone().detach()
+                 #   for t in self.personal_model.coreset_sigmas]))) 
+
+            K_L_q_q_w = sum([torch.sum(kl_divergence(Normal(self.personal_model.mus[i].clone(), self.personal_model.sigmas[i].clone()),
+                                                            Normal(self.personal_model.coreset_mus[i].clone(), self.personal_model.coreset_sigmas[i].clone()))) for i in range(len(copy.deepcopy(self.personal_model.mus)))])
             # K_L_q_q_w.backward()
+            
+            print(K_L_q_q_w)
             self.coreset_optimizer.zero_grad()
-            K_L_q_q_w.backward()
+            K_L_q_q_w.backward(retain_graph=True)
+
             self.coreset_optimizer.step()
             ###########
 
