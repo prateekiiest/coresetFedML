@@ -35,7 +35,14 @@ class ClientModelClass(Client):
         for epoch in range(1, self.local_epochs + 1):
 
             X, Y = self.get_next_train_batch()
+            
+            print(X.shape)
+            
             batch_X = Variable(X.view(self.batch_size, -1))
+            print(batch_X.shape)            
+            X_coreset = weighted(X)
+
+            batch_X_coreset = Variable(X_coreset.view(self.batch_size, -1))
             batch_Y = Variable(Y.view(self.batch_size, -1))
             label_one_hot = F.one_hot(batch_Y, num_classes=self.output_dim).squeeze(dim=1)
 
@@ -61,7 +68,13 @@ class ClientModelClass(Client):
             ### local model
             epsilons = self.model.sample_epsilons(self.model.layer_param_shapes)
             layer_params2 = self.model.transform_gaussian_samples(self.model.mus, self.model.rhos, epsilons)
+            
+            layer_params2_coreset = self.model.transform_gaussian_samples(self.model.coreset_mus, self.model.coreset_rhos, epsilons)
+            
             model_output = self.model.net(batch_X, layer_params2)
+            
+            
+            model_output_coreset = self.model.net(batch_X_coreset, layer_params2_coreset)
             # calculate the loss
             model_loss = self.model.combined_loss_local(
                 [t.clone().detach() for t in layer_params1],
@@ -69,8 +82,16 @@ class ClientModelClass(Client):
                 [t.clone().detach() for t in self.personal_model.sigmas],
                 self.model.mus, self.model.sigmas, self.local_epochs)
 
+            model_loss_coreset = self.model.combined_loss_local(
+                [t.clone().detach() for t in layer_params1],
+                copy.deepcopy(self.personal_model.mus),
+                [t.clone().detach() for t in self.personal_model.sigmas],
+                self.model.mus, self.model.sigmas, self.local_epochs)
+            
+            
             self.optimizer2.zero_grad()
             model_loss.backward()
+            model_loss_coreset.backward()
             self.optimizer2.step()
 
         return LOSS

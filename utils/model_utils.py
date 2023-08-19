@@ -13,8 +13,8 @@ NUM_CHANNELS_CIFAR = 3
 def read_data(dataset, subset='data'):
     
 
-    train_data_dir = os.path.join('data', dataset, subset, 'train')
-    test_data_dir = os.path.join('data', dataset, subset, 'test')
+    train_data_dir = os.path.join('data', dataset, 'train')
+    test_data_dir = os.path.join('data', dataset,  'test')
     clients = []
     groups = []
     train_data = {}

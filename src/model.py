@@ -20,7 +20,9 @@ class federatedBNN(nn.Module):
         self.sigma_prior = 5
         self.layer_param_shapes = self.get_layer_param_shapes()
         self.mus = nn.ParameterList()
+        self.coreset_mus = nn.ParameterList()
         self.rhos = nn.ParameterList()
+        self.coreset_rhos = nn.ParameterList()
         self.weight_scale = weight_scale
         self.rho_offset = rho_offset
         self.zeta = torch.tensor(zeta, device=self.device)
