@@ -63,6 +63,14 @@ class federatedBNN(nn.Module):
             samples.append(mus[j] + self.sigmas[j] * epsilons[j])
         return samples
 
+    def transform_gaussian_samples_coreset(self, coreset_mus, coreset_rhos, epsilons):
+        self.coreset_sigmas = self.transform_rhos(coreset_rhos)
+        coreset_samples = []
+        for j in range(len(coreset_mus)):
+            coreset_samples.append(coreset_mus[j] + self.coreset_sigmas[j] * epsilons[j])
+        return coreset_samples
+
+
     def sample_epsilons(self, param_shapes):
         epsilons = [torch.normal(mean=torch.zeros(shape), std=0.001*torch.ones(shape)).to(self.device) for shape in
                     param_shapes]
@@ -89,6 +97,22 @@ class federatedBNN(nn.Module):
                                               Normal(mus_local[i].detach(), sigmas_local[i].detach()))) for i in range(len(params))])
 
         return 1.0 / num_batches * (self.zeta * KL_q_w) - log_likelihood_sum
+
+
+    def combined_loss_personal_coreset(self, output, label_one_hot, params, coreset_mus, coreset_sigmas, mus_local, sigmas_local, num_batches):
+        # Calculate data likelihood
+        log_likelihood_sum = torch.sum(
+            self.log_softmax_likelihood(output, label_one_hot))
+        KL_q_w = sum([torch.sum(kl_divergence(Normal(coreset_mus[i], coreset_sigmas[i]),
+                                              Normal(mus_local[i].detach(), sigmas_local[i].detach()))) for i in range(len(params))])
+
+        return 1.0 / num_batches * (self.zeta * KL_q_w) - log_likelihood_sum
+
+    def combined_loss_local_coreset(self, params, coreset_mus, coreset_sigmas, mus_local, sigmas_local, num_batches):
+        KL_q_w = sum([torch.sum(kl_divergence(Normal(coreset_mus[i].detach(), coreset_sigmas[i].detach()),
+                                              Normal(mus_local[i], sigmas_local[i]))) for i in range(len(params))])
+        return 1.0 / num_batches * (self.zeta * KL_q_w)
+
 
     def combined_loss_local(self, params, mus, sigmas, mus_local, sigmas_local, num_batches):
         KL_q_w = sum([torch.sum(kl_divergence(Normal(mus[i].detach(), sigmas[i].detach()),

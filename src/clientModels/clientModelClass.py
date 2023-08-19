@@ -14,9 +14,15 @@ class ClientModelClass(Client):
         self.batch_size = batch_size
         self.N_Batch = len(train_data) // batch_size
         self.personal_learning_rate = personal_learning_rate
-        self.optimizer1 = torch.optim.Adam(self.personal_model.parameters(), lr=self.personal_learning_rate)
-        self.optimizer2 = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        self.coreset_optimizer =torch.optim.Adam(self.model.coreset_weights(),lr=self.personal_learning_rate)
+        self.optimizer1 = torch.optim.Adam(
+            self.personal_model.parameters(), lr=self.personal_learning_rate)
+        self.optimizer2 = torch.optim.Adam(
+            self.model.parameters(), lr=self.learning_rate)
+        self.optimizer3 = torch.optim.Adam(
+            self.model.parameters(), lr=self.learning_rate)
+        self.coreset_optimizer = torch.optim.Adam(
+            self.model.coreset_weights(), lr=self.personal_learning_rate)
+
     def set_grads(self, new_grads):
         if isinstance(new_grads, nn.Parameter):
             for model_grad, new_grad in zip(self.model.parameters(), new_grads):
@@ -33,29 +39,32 @@ class ClientModelClass(Client):
         self.personal_model.train()
 
         # for epoch in range(1, corset_epochs  + 1):
-        ##  initialize some weight vector w
-        ##  w to be used for training
+        # initialize some weight vector w
+        # w to be used for training
         for epoch in range(1, self.local_epochs + 1):
 
             X, Y = self.get_next_train_batch()
-            
+
             print(X.shape)
-            
+
             batch_X = Variable(X.view(self.batch_size, -1))
-            print(batch_X.shape)            
+            print(batch_X.shape)
             X_coreset = weighted(X)
 
             batch_X_coreset = Variable(X_coreset.view(self.batch_size, -1))
             batch_Y = Variable(Y.view(self.batch_size, -1))
-            label_one_hot = F.one_hot(batch_Y, num_classes=self.output_dim).squeeze(dim=1)
+            label_one_hot = F.one_hot(
+                batch_Y, num_classes=self.output_dim).squeeze(dim=1)
 
             for r in range(1, Round + 1):
-                ### personal model
-                epsilons = self.personal_model.sample_epsilons(self.model.layer_param_shapes)
+                # personal model
+                epsilons = self.personal_model.sample_epsilons(
+                    self.model.layer_param_shapes)
                 layer_params1 = self.personal_model.transform_gaussian_samples(
                     self.personal_model.mus, self.personal_model.rhos, epsilons)
 
-                personal_output = self.personal_model.net(batch_X, layer_params1)
+                personal_output = self.personal_model.net(
+                    batch_X, layer_params1)
                 # calculate the loss
                 personal_loss = self.personal_model.combined_loss_personal(
                     personal_output, label_one_hot, layer_params1,
@@ -63,21 +72,40 @@ class ClientModelClass(Client):
                     copy.deepcopy(self.model.mus),
                     [t.clone().detach() for t in self.model.sigmas], self.local_epochs)
 
+                epsilons_coreset = self.personal_model.sample_epsilons(
+                    self.model.layer_param_shapes)
+                layer_params1_coreset = self.personal_model.transform_gaussian_samples_coreset(
+                    self.personal_model.coreset_mus, self.personal_model.coreset_rhos, epsilons_coreset)
+
+                personal_output_coreset = self.personal_model.net(
+                    batch_X_coreset, layer_params1_coreset)
+
+                personal_loss_coreset = self.personal_model.combined_loss_personal_coreset(
+                    personal_output_coreset, label_one_hot, layer_params1_coreset,
+                    self.personal_model.coreset_mus, self.personal_model.coreset_sigmas,
+                    copy.deepcopy(self.model.mus),
+                    [t.clone().detach()
+                     for t in self.model.sigmas], self.local_epochs
+                )
+
                 self.optimizer1.zero_grad()
                 personal_loss.backward()
+                personal_loss_coreset.backward()
                 self.optimizer1.step()
 
+            # local model
+            epsilons = self.model.sample_epsilons(
+                self.model.layer_param_shapes)
+            layer_params2 = self.model.transform_gaussian_samples(
+                self.model.mus, self.model.rhos, epsilons)
 
-            ### local model
-            epsilons = self.model.sample_epsilons(self.model.layer_param_shapes)
-            layer_params2 = self.model.transform_gaussian_samples(self.model.mus, self.model.rhos, epsilons)
-            
-            layer_params2_coreset = self.model.transform_gaussian_samples(self.model.coreset_mus, self.model.coreset_rhos, epsilons)
-            
+            layer_params2_coreset = self.model.transform_gaussian_samples(
+                self.model.coreset_mus, self.model.coreset_rhos, epsilons)
+
             model_output = self.model.net(batch_X, layer_params2)
-            
-            
-            model_output_coreset = self.model.net(batch_X_coreset, layer_params2_coreset)
+
+            model_output_coreset = self.model.net(
+                batch_X_coreset, layer_params2_coreset)
             # calculate the loss
             model_loss = self.model.combined_loss_local(
                 [t.clone().detach() for t in layer_params1],
@@ -85,24 +113,24 @@ class ClientModelClass(Client):
                 [t.clone().detach() for t in self.personal_model.sigmas],
                 self.model.mus, self.model.sigmas, self.local_epochs)
 
-            model_loss_coreset = self.model.combined_loss_local(
+            model_loss_coreset = self.model.combined_loss_local_coreset(
                 [t.clone().detach() for t in layer_params1],
-                copy.deepcopy(self.personal_model.mus),
-                [t.clone().detach() for t in self.personal_model.sigmas],
+                copy.deepcopy(self.personal_model.coreset_mus),
+                [t.clone().detach()
+                 for t in self.personal_model.coreset_sigmas],
                 self.model.mus, self.model.sigmas, self.local_epochs)
-            
-            
+
             self.optimizer2.zero_grad()
             model_loss.backward()
             model_loss_coreset.backward()
             self.optimizer2.step()
-            
-            
-        ########### 
-        
-        # at the end of for loop we will have the optimal loss for both 
+
+        ###########
+
+        # at the end of for loop we will have the optimal loss for both
         # the coreset loss and original loss. For each client will have a weight vector
-        # K_L_q_q_w = sum([torch.sum(kl_divergence(Normal(mus_local[i], sigmas_local[i]),  Normal(mus_local_coreset[i].detach(), sigmas_local_coreset[i].detach()))) for i in range(len(params))])
+        K_L_q_q_w = sum([torch.sum(kl_divergence(Normal(self.personal_model.mus[i].detach(), self.personal_model.sigmas[i].detach()),
+                                                 Normal(self.personal_model.coreset_mus[i].detach(), self.personal_model.coreset_sigmas[i].detach()))) for i in range(len(params))])
 
         # K_L_q_q_w.backward()
         self.coreset_optimizer.zero_grad()
