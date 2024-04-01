@@ -20,7 +20,8 @@ class Client:
                  local_epochs=0, device=torch.device('cpu'), output_dim=10):
         # from fedprox
         self.output_dim = output_dim
-        self.model = copy.deepcopy(model) if isinstance(model, Module) else model().to(device)
+        self.model = copy.deepcopy(model) if isinstance(
+            model, Module) else model().to(device)
         self.id = id  # integer
         self.train_samples = len(train_data)
         self.test_samples = len(test_data)
@@ -41,13 +42,14 @@ class Client:
         self.personal_model = copy.deepcopy(model)
         # self.local_model = copy.deepcopy(model)
         self.persionalized_model = copy.deepcopy(list(self.model.parameters()))
-        self.persionalized_model_bar = copy.deepcopy(list(self.model.parameters()))
+        self.persionalized_model_bar = copy.deepcopy(
+            list(self.model.parameters()))
         self.device = device
 
         # with torch.no_grad():
         #     self.personal_model.weight.fill_(model.weight)
         #     self.model.weight.fill_(model.weight)
-        
+
         """
         for x, y in self.testloader:
             print("train X data", x)
@@ -72,9 +74,10 @@ class Client:
         data_dim = 784
         hidden_dim = 100
         total = (data_dim + 1) * hidden_dim + (hidden_dim + 1) * hidden_dim + (hidden_dim + 1) * hidden_dim + (
-                hidden_dim + 1) * 1
+            hidden_dim + 1) * 1
         L = 3
-        a = np.log(total) + 0.1 * ((L + 1) * np.log(hidden_dim) + np.log(np.sqrt(self.data_size) * data_dim))
+        a = np.log(total) + 0.1 * ((L + 1) * np.log(hidden_dim) +
+                                   np.log(np.sqrt(self.data_size) * data_dim))
         lm = 1 / np.exp(a)
         self.phi_prior = torch.tensor(lm).to(self.device)
         self.temp = 0.5
@@ -135,15 +138,18 @@ class Client:
         test_acc = 0
         for x, y in self.testloaderfull:
             test_size = x.size()[0]
-            test_X = Variable(x.view(test_size, -1).type(torch.FloatTensor)).to(self.device)
+            test_X = Variable(
+                x.view(test_size, -1).type(torch.FloatTensor)).to(self.device)
             test_Y = Variable(y.view(test_size, -1)).to(self.device)
             # output = self.model.forward(test_X, mode='MAP').data.argmax(axis=1)
 
-            epsilons = self.model.sample_epsilons(self.model.layer_param_shapes)
+            epsilons = self.model.sample_epsilons(
+                self.model.layer_param_shapes)
             # compute softplus for variance
             sigmas = self.model.transform_rhos(self.model.rhos)
             # obtain a sample from q(w|theta) by transforming the epsilons
-            layer_params = self.model.transform_gaussian_samples(self.model.mus, sigmas, epsilons)
+            layer_params = self.model.transform_gaussian_samples(
+                self.model.mus, sigmas, epsilons)
             # forward-propagate the batch
             output = self.model.net(test_X, layer_params)
             output = F.softmax(output, dim=1).data.argmax(axis=1)
@@ -162,11 +168,13 @@ class Client:
         test_acc_global = 0
         for x, y in self.testloaderfull:
             test_size = x.size()[0]
-            test_X = Variable(x.view(test_size, -1).type(torch.FloatTensor)).to(self.device)
+            test_X = Variable(
+                x.view(test_size, -1).type(torch.FloatTensor)).to(self.device)
             test_Y = Variable(y.view(test_size, -1)).to(self.device)
 
             # personal model
-            epsilons = self.personal_model.sample_epsilons(self.model.layer_param_shapes)
+            epsilons = self.personal_model.sample_epsilons(
+                self.model.layer_param_shapes)
             # obtain a sample from q(w|theta) by transforming the epsilons
             layer_params1 = self.personal_model.transform_gaussian_samples(self.personal_model.mus,
                                                                            self.personal_model.rhos, epsilons)
@@ -177,9 +185,11 @@ class Client:
             test_acc_personal += (torch.sum(output == y)).item()
 
             # global model
-            epsilons = self.model.sample_epsilons(self.model.layer_param_shapes)
+            epsilons = self.model.sample_epsilons(
+                self.model.layer_param_shapes)
             # obtain a sample from q(w|theta) by transforming the epsilons
-            layer_params1 = self.model.transform_gaussian_samples(self.model.mus, self.model.rhos, epsilons)
+            layer_params1 = self.model.transform_gaussian_samples(
+                self.model.mus, self.model.rhos, epsilons)
             # forward-propagate the batch
             output = self.model.net(test_X, layer_params1)
             output = F.softmax(output, dim=1).data.argmax(axis=1)
@@ -193,7 +203,8 @@ class Client:
         test_acc = 0
         for x, y in self.testloaderfull:
             test_size = x.size()[0]
-            test_X = Variable(x.view(test_size, -1).type(torch.FloatTensor)).to(self.device)
+            test_X = Variable(
+                x.view(test_size, -1).type(torch.FloatTensor)).to(self.device)
             test_Y = Variable(y.view(test_size, -1)).to(self.device)
             output = self.model.forward(test_X, mode='MAP').data.argmax(axis=1)
             # loss, pred = self.model.sample_elbo(test_X, test_Y, 30, self.temp, self.phi_prior, self.N_Batch)
@@ -216,10 +227,12 @@ class Client:
             print("train X data", x)
 
             test_size = x.size()[0]
-            test_X = Variable(x.view(test_size, -1).type(torch.FloatTensor)).to(self.device)
+            test_X = Variable(
+                x.view(test_size, -1).type(torch.FloatTensor)).to(self.device)
             test_Y = Variable(y.view(test_size, -1)).to(self.device)
             # output = self.model.forward(test_X, mode='MAP').data.argmax(axis=1)
-            loss, pred = self.model.sample_elbo(test_X, test_Y, 30, self.temp, self.phi_prior, self.N_Batch)
+            loss, pred = self.model.sample_elbo(
+                test_X, test_Y, 30, self.temp, self.phi_prior, self.N_Batch)
             pred = pred.mean(dim=0)
             output = pred.data.argmax(axis=1)
             y = test_Y.data.view(test_size)
@@ -252,15 +265,19 @@ class Client:
         loss = 0
         for x, y in self.trainloaderfull:
             size = x.size()[0]
-            train_X = Variable(x.view(size, -1).type(torch.FloatTensor)).to(self.device)
+            train_X = Variable(
+                x.view(size, -1).type(torch.FloatTensor)).to(self.device)
             train_Y = Variable(y.view(size, -1)).to(self.device)
 
-            label_one_hot = F.one_hot(train_Y, num_classes=self.output_dim).squeeze(dim=1)
-            epsilons = self.model.sample_epsilons(self.model.layer_param_shapes)
+            label_one_hot = F.one_hot(
+                train_Y, num_classes=self.output_dim).squeeze(dim=1)
+            epsilons = self.model.sample_epsilons(
+                self.model.layer_param_shapes)
             # compute softplus for variance
             sigmas = self.model.transform_rhos(self.model.rhos)
             # obtain a sample from q(w|theta) by transforming the epsilons
-            layer_params = self.model.transform_gaussian_samples(self.model.mus, sigmas, epsilons)
+            layer_params = self.model.transform_gaussian_samples(
+                self.model.mus, sigmas, epsilons)
             # forward-propagate the batch
             output = self.model.net(train_X, layer_params)
             # calculate the loss
@@ -281,13 +298,15 @@ class Client:
         total_samples = 0
         for x, y in self.trainloader:
             size = x.size()[0]
-            train_X = Variable(x.view(size, -1).type(torch.FloatTensor)).to(self.device)
+            train_X = Variable(
+                x.view(size, -1).type(torch.FloatTensor)).to(self.device)
             train_Y = Variable(y.view(size, -1)).to(self.device)
 
-
-            label_one_hot = F.one_hot(train_Y, num_classes=self.output_dim).squeeze(dim=1)
-            ### personal model
-            epsilons = self.personal_model.sample_epsilons(self.model.layer_param_shapes)
+            label_one_hot = F.one_hot(
+                train_Y, num_classes=self.output_dim).squeeze(dim=1)
+            # personal model
+            epsilons = self.personal_model.sample_epsilons(
+                self.model.layer_param_shapes)
             # obtain a sample from q(w|theta) by transforming the epsilons
             layer_params1 = self.personal_model.transform_gaussian_samples(self.personal_model.mus,
                                                                            self.personal_model.rhos, epsilons)
@@ -295,7 +314,7 @@ class Client:
 
             A = train_X
             (M, N) = A.shape
-            #print('M is {}, N is {}'.format(M, N))
+            # print('M is {}, N is {}'.format(M, N))
             K = 100
             true_supp = np.random.permutation(N)[:K]
 
@@ -304,13 +323,11 @@ class Client:
             true_w = torch.tensor(true_w)
             train_Y = train_Y.type(torch.FloatTensor)
 
-            #aciht_torch = AcceleratedIHT(train_Y,A,true_w,K)
-            #print('using A-IHT II by torch...')
-            #w, supp = aciht_torch.accelrated_IHT_II()
+            # aciht_torch = AcceleratedIHT(train_Y,A,true_w,K)
+            # print('using A-IHT II by torch...')
+            # w, supp = aciht_torch.accelrated_IHT_II()
            # obj_value = torch.norm(train_Y - A.mm(w))
            # print('A-IHT II (torch) finds solution with objective value {}; sum(w) is {}\n'.format(obj_value, w.sum()))
-
-
 
             output = self.personal_model.net(train_X, layer_params1)
             # calculate the loss
@@ -331,9 +348,11 @@ class Client:
         loss = 0
         for x, y in self.trainloaderfull:
             size = x.size()[0]
-            train_X = Variable(x.view(size, -1).type(torch.FloatTensor)).to(self.device)
+            train_X = Variable(
+                x.view(size, -1).type(torch.FloatTensor)).to(self.device)
             train_Y = Variable(y.view(size, -1)).to(self.device)
-            output = self.model.forward(train_X, mode='MAP').data.argmax(axis=1)
+            output = self.model.forward(
+                train_X, mode='MAP').data.argmax(axis=1)
             # loss_temp, pred = self.model.sample_elbo(train_X, train_Y, 30, self.temp, self.phi_prior, self.N_Batch)
             # pred = pred.mean(dim=0)
             # output = pred.data.argmax(axis=1)
@@ -351,9 +370,11 @@ class Client:
         loss = 0
         for x, y in self.trainloaderfull:
             size = x.size()[0]
-            train_X = Variable(x.view(size, -1).type(torch.FloatTensor)).to(self.device)
+            train_X = Variable(
+                x.view(size, -1).type(torch.FloatTensor)).to(self.device)
             train_Y = Variable(y.view(size, -1)).to(self.device)
-            loss_temp, pred = self.model.sample_elbo(train_X, train_Y, 30, self.temp, self.phi_prior, self.N_Batch)
+            loss_temp, pred = self.model.sample_elbo(
+                train_X, train_Y, 30, self.temp, self.phi_prior, self.N_Batch)
             pred = pred.mean(dim=0)
             output = pred.data.argmax(axis=1)
             y = train_Y.data.view(size)
@@ -415,7 +436,8 @@ class Client:
         model_path = os.path.join("models", self.dataset)
         if not os.path.exists(model_path):
             os.makedirs(model_path)
-        torch.save(self.model, os.path.join(model_path, "client_" + self.id + ".pt"))
+        torch.save(self.model, os.path.join(
+            model_path, "client_" + self.id + ".pt"))
 
     def load_model(self):
         model_path = os.path.join("models", self.dataset)

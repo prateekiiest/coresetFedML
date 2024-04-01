@@ -6,7 +6,6 @@ from torch.distributions.normal import Normal
 from torch.distributions.kl import kl_divergence
 
 
-
 class federatedBNN(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim, device=torch.device('cpu'),
                  weight_scale=0.1, rho_offset=-3, zeta=10):
@@ -31,14 +30,14 @@ class federatedBNN(nn.Module):
             [1.] * len(self.layer_param_shapes), device=self.device)
         self.coreset_sigmas = torch.tensor(
             [1.] * len(self.layer_param_shapes), device=self.device)
-        
+
         for shape in self.layer_param_shapes:
             mu = nn.Parameter(torch.normal(mean=torch.zeros(
                 shape), std=self.weight_scale * torch.ones(shape)))
             rho = nn.Parameter(self.rho_offset + torch.zeros(shape))
             self.mus.append(mu)
             self.rhos.append(rho)
-            
+
             coreset_mu = nn.Parameter(torch.normal(mean=torch.zeros(
                 shape), std=self.weight_scale * torch.ones(shape)))
             coreset_rho = nn.Parameter(self.rho_offset + torch.zeros(shape))
@@ -75,9 +74,9 @@ class federatedBNN(nn.Module):
         self.coreset_sigmas = self.transform_rhos(coreset_rhos)
         coreset_samples = []
         for j in range(len(coreset_mus)):
-            coreset_samples.append(coreset_mus[j] + self.coreset_sigmas[j] * epsilons[j])
+            coreset_samples.append(
+                coreset_mus[j] + self.coreset_sigmas[j] * epsilons[j])
         return coreset_samples
-
 
     def sample_epsilons(self, param_shapes):
         epsilons = [torch.normal(mean=torch.zeros(shape), std=0.001*torch.ones(shape)).to(self.device) for shape in
@@ -105,7 +104,6 @@ class federatedBNN(nn.Module):
 
         return 1.0 / num_batches * (self.zeta * KL_q_w) - log_likelihood_sum
 
-
     def combined_loss_personal_coreset(self, output, label_one_hot, params, coreset_mus, coreset_sigmas, mus_local, sigmas_local, num_batches):
         # Calculate data likelihood
         log_likelihood_sum = torch.sum(
@@ -120,36 +118,34 @@ class federatedBNN(nn.Module):
                                               Normal(mus_local[i], sigmas_local[i]))) for i in range(len(params))])
         return 1.0 / num_batches * (self.zeta * KL_q_w)
 
-
     def combined_loss_local(self, params, mus, sigmas, mus_local, sigmas_local, num_batches):
         KL_q_w = sum([torch.sum(kl_divergence(Normal(mus[i].detach(), sigmas[i].detach()),
                                               Normal(mus_local[i], sigmas_local[i]))) for i in range(len(params))])
         return 1.0 / num_batches * (self.zeta * KL_q_w)
 
-
-
-
     ###
-    ### Objective functions formulations
-    def new_loss_objective(self,output, coreset_output, label_one_hot, params, mus, sigmas, mus_local, sigmas_local,mus_local_coreset,sigmas_local_coreset, num_batches):
+    # Objective functions formulations
+    def new_loss_objective(self, output, coreset_output, label_one_hot, params, mus, sigmas, mus_local, sigmas_local, mus_local_coreset, sigmas_local_coreset, num_batches):
         # Calculate data likelihood
         log_likelihood_sum = torch.sum(
             self.log_softmax_likelihood(output, label_one_hot))
-        
+
         # Calculate coreset likelihood
-        coreset_log_likelihood_sum = torch.sum(self.log_softmax_likelihood(coreset_output, label_one_hot))
+        coreset_log_likelihood_sum = torch.sum(
+            self.log_softmax_likelihood(coreset_output, label_one_hot))
 
         KL_q = sum([torch.sum(kl_divergence(Normal(mus[i], sigmas[i]),
-                                              Normal(mus_local[i].detach(), sigmas_local[i].detach()))) for i in range(len(params))])
-        
+                                            Normal(mus_local[i].detach(), sigmas_local[i].detach()))) for i in range(len(params))])
+
         KL_q_w = sum([torch.sum(kl_divergence(Normal(mus[i], sigmas[i]),
                                               Normal(mus_local[i].detach(), sigmas_local[i].detach()))) for i in range(len(params))])
 
+        F_i_z = 1.0 / num_batches * (self.zeta * KL_q) - log_likelihood_sum
+        F_i_z_w = 1.0 / num_batches * \
+            (self.zeta * KL_q_w) - coreset_log_likelihood_sum
 
-        F_i_z =  1.0 / num_batches * (self.zeta * KL_q) - log_likelihood_sum
-        F_i_z_w = 1.0 / num_batches * (self.zeta * KL_q_w) - coreset_log_likelihood_sum
-
-
-        KL_q_distributions = sum([torch.sum(kl_divergence(Normal(mus_local[i], sigmas_local[i]),  Normal(mus_local_coreset[i].detach(), sigmas_local_coreset[i].detach()))) for i in range(len(params))])
-        F_i_distributions = 1.0 / num_batches * (self.zeta * KL_q_distributions) - coreset_log_likelihood_sum
+        KL_q_distributions = sum([torch.sum(kl_divergence(Normal(mus_local[i], sigmas_local[i]),  Normal(
+            mus_local_coreset[i].detach(), sigmas_local_coreset[i].detach()))) for i in range(len(params))])
+        F_i_distributions = 1.0 / num_batches * \
+            (self.zeta * KL_q_distributions) - coreset_log_likelihood_sum
         return F_i_distributions

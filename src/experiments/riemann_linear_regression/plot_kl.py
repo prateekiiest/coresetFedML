@@ -1,3 +1,6 @@
+import cairosvg
+from bokeh.io import export_svgs
+from plotting import *
 import os
 import sys
 
@@ -6,13 +9,11 @@ import numpy as np
 
 # make it so we can import models/etc from parent folder
 sys.path.insert(1, os.path.join(sys.path[0], '../common'))
-from plotting import *
-from bokeh.io import export_svgs
-import cairosvg
 
 plot_reverse_kl = False
 trials = np.arange(1, 11)
-nms = [('GIGAOE', 'GIGA'), ('SVI', 'SparseVI'), ('RAND', 'Uniform'), ('IHT', 'A-IHT'), ('IHT-2', 'A-IHT II')]
+nms = [('GIGAOE', 'GIGA'), ('SVI', 'SparseVI'), ('RAND', 'Uniform'),
+       ('IHT', 'A-IHT'), ('IHT-2', 'A-IHT II')]
 M = 300
 
 # plot the KL figure
@@ -36,7 +37,8 @@ for i, nm in enumerate(nms):
         sz.append((res['w'] > 0).sum(axis=1)[::plot_every])
     # x = np.percentile(sz, 50, axis=0)
     x = list(range(2, M + 1))[::plot_every]
-    fig.line(x, np.percentile(kl, 50, axis=0), color=pal[i], line_width=5, legend=nm[1])
+    fig.line(x, np.percentile(kl, 50, axis=0),
+             color=pal[i], line_width=5, legend=nm[1])
     fig.patch(x=np.hstack((x, x[::-1])),
               y=np.hstack((np.percentile(kl, 75, axis=0), np.percentile(kl, 25, axis=0)[::-1])), color=pal[i],
               fill_alpha=0.4, legend=nm[1])
@@ -64,7 +66,8 @@ postprocess_plot(fig, '22pt', location='bottom_left', glyph_width=40)
 fig.legend.background_fill_alpha = 0.
 fig.legend.border_line_alpha = 0.
 legend_len = len(fig.legend.items)
-fig.legend.items = fig.legend.items[legend_len - 2:legend_len] + fig.legend.items[0:legend_len - 2]
+fig.legend.items = fig.legend.items[legend_len -
+                                    2:legend_len] + fig.legend.items[0:legend_len - 2]
 
 fig.output_backend = 'svg'
 
