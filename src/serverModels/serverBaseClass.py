@@ -6,10 +6,24 @@ import numpy as np
 import torch
 from torch.nn import Module
 
-class Server:
-    def __init__(self, dataset, algorithm, model, batch_size, learning_rate, beta, lamda,
-                 num_glob_iters, local_epochs, optimizer, num_users, times, device):
 
+class Server:
+    def __init__(
+        self,
+        dataset,
+        algorithm,
+        model,
+        batch_size,
+        learning_rate,
+        beta,
+        lamda,
+        num_glob_iters,
+        local_epochs,
+        optimizer,
+        num_users,
+        times,
+        device,
+    ):
         # Set up the main attributes
         self.dataset = dataset
         self.num_glob_iters = num_glob_iters
@@ -18,19 +32,28 @@ class Server:
         self.learning_rate = learning_rate
         self.total_train_samples = 0
         # global model.
-        self.model = copy.deepcopy(model) if isinstance(
-            model, Module) else model().to(device)
+        self.model = (
+            copy.deepcopy(model) if isinstance(model, Module) else model().to(device)
+        )
         self.users = []
         self.selected_users = []
         self.num_users = num_users
         self.beta = beta
         self.lamda = lamda
         self.algorithm = algorithm
-        self.rs_train_acc, self.rs_train_loss, self.rs_glob_acc, self.rs_per_acc, self.rs_train_acc_per, self.rs_train_loss_per, self.rs_glob_acc_per = [], [], [], [], [], [], []
+        (
+            self.rs_train_acc,
+            self.rs_train_loss,
+            self.rs_glob_acc,
+            self.rs_per_acc,
+            self.rs_train_acc_per,
+            self.rs_train_loss_per,
+            self.rs_glob_acc_per,
+        ) = [], [], [], [], [], [], []
         self.times = times
 
     def aggregate_grads(self):
-        assert (self.users is not None and len(self.users) > 0)
+        assert self.users is not None and len(self.users) > 0
         for param in self.model.parameters():
             param.grad = torch.zeros_like(param.data)
         for user in self.users:
@@ -42,17 +65,19 @@ class Server:
             param.grad = param.grad + user_grad[idx].clone() * ratio
 
     def send_parameters(self):
-        assert (self.users is not None and len(self.users) > 0)
+        assert self.users is not None and len(self.users) > 0
         for user in self.users:
             user.set_parameters(self.model)
 
     def add_parameters(self, user, ratio):
-        model = self.model.parameters()
-        for server_param, user_param in zip(self.model.parameters(), user.get_parameters()):
+        self.model.parameters()
+        for server_param, user_param in zip(
+            self.model.parameters(), user.get_parameters()
+        ):
             server_param.data = server_param.data + user_param.data.clone() * ratio
 
     def aggregate_parameters(self):
-        assert (self.users is not None and len(self.users) > 0)
+        assert self.users is not None and len(self.users) > 0
         for param in self.model.parameters():
             param.data = torch.zeros_like(param.data)
         total_train = 0
@@ -72,14 +97,14 @@ class Server:
 
     def load_model(self):
         model_path = os.path.join("models", self.dataset, "server" + ".pt")
-        assert (os.path.exists(model_path))
+        assert os.path.exists(model_path)
         self.model = torch.load(model_path)
 
     def model_exists(self):
         return os.path.exists(os.path.join("models", self.dataset, "server" + ".pt"))
 
     def select_users(self, round, num_users):
-        '''selects num_clients clients weighted by number of samples from possible_clients
+        """selects num_clients clients weighted by number of samples from possible_clients
         Args:
             num_clients: number of clients to select; default 20
                 note that within function, num_clients is set to
@@ -87,8 +112,8 @@ class Server:
 
         Return:
             list of selected clients objects
-        '''
-        if (num_users == len(self.users)):
+        """
+        if num_users == len(self.users):
             print("All users are selected")
             return self.users
 
@@ -100,11 +125,13 @@ class Server:
     # define function for persionalized agegatation.
     def persionalized_update_parameters(self, user, ratio):
         # only argegate the local_weight_update
-        for server_param, user_param in zip(self.model.parameters(), user.local_weight_updated):
+        for server_param, user_param in zip(
+            self.model.parameters(), user.local_weight_updated
+        ):
             server_param.data = server_param.data + user_param.data.clone() * ratio
 
     def persionalized_aggregate_parameters(self):
-        assert (self.users is not None and len(self.users) > 0)
+        assert self.users is not None and len(self.users) > 0
 
         # store previous parameters
         previous_param = copy.deepcopy(list(self.model.parameters()))
@@ -121,77 +148,115 @@ class Server:
 
         # aaggregate avergage model with previous model using parameter beta
         for pre_param, param in zip(previous_param, self.model.parameters()):
-            param.data = (1 - self.beta)*pre_param.data + self.beta*param.data
+            param.data = (1 - self.beta) * pre_param.data + self.beta * param.data
 
     # Save loss, accurancy to h5 fiel
     def save_results(self, post_fix_str):
         alg = self.dataset + "_" + self.algorithm
-        alg = alg + "_" + str(self.learning_rate) + "_" + str(self.beta) + "_" + str(self.lamda) + "_" + str(
-            self.num_users) + "u" + "_" + str(self.batch_size) + "b" + "_" + str(self.local_epochs)
-        if (self.algorithm == "pFedMe" or self.algorithm == "pFedMe_p"):
-            alg = alg + "_" + str(self.K) + "_" + \
-                str(self.personal_learning_rate)
+        alg = (
+            alg
+            + "_"
+            + str(self.learning_rate)
+            + "_"
+            + str(self.beta)
+            + "_"
+            + str(self.lamda)
+            + "_"
+            + str(self.num_users)
+            + "u"
+            + "_"
+            + str(self.batch_size)
+            + "b"
+            + "_"
+            + str(self.local_epochs)
+        )
+        if self.algorithm == "pFedMe" or self.algorithm == "pFedMe_p":
+            alg = alg + "_" + str(self.K) + "_" + str(self.personal_learning_rate)
         alg = alg + "_" + str(self.times)
 
-        if (len(self.rs_glob_acc) != 0 & len(self.rs_train_acc) & len(self.rs_train_loss)):
-            with h5py.File("./results/"+'{}.h5'.format(alg + '_' + post_fix_str, self.local_epochs), 'w') as hf:
-                hf.create_dataset('rs_per_acc', data=self.rs_per_acc)
-                hf.create_dataset('rs_glob_acc', data=self.rs_glob_acc)
-                hf.create_dataset('rs_train_acc', data=self.rs_train_acc)
-                hf.create_dataset('rs_train_loss', data=self.rs_train_loss)
+        if len(self.rs_glob_acc) != 0 & len(self.rs_train_acc) & len(
+            self.rs_train_loss
+        ):
+            with h5py.File(
+                "./results/"
+                + "{}.h5".format(
+                    alg + "_" + post_fix_str,
+                ),
+                "w",
+            ) as hf:
+                hf.create_dataset("rs_per_acc", data=self.rs_per_acc)
+                hf.create_dataset("rs_glob_acc", data=self.rs_glob_acc)
+                hf.create_dataset("rs_train_acc", data=self.rs_train_acc)
+                hf.create_dataset("rs_train_loss", data=self.rs_train_loss)
                 hf.close()
 
         # store persionalized value
         alg = self.dataset + "_" + self.algorithm + "_p"
-        alg = alg + "_" + str(self.learning_rate) + "_" + str(self.beta) + "_" + str(self.lamda) + "_" + str(
-            self.num_users) + "u" + "_" + str(self.batch_size) + "b" + "_" + str(self.local_epochs)
-        if (self.algorithm == "pFedMe" or self.algorithm == "pFedMe_p"):
-            alg = alg + "_" + str(self.K) + "_" + \
-                str(self.personal_learning_rate)
+        alg = (
+            alg
+            + "_"
+            + str(self.learning_rate)
+            + "_"
+            + str(self.beta)
+            + "_"
+            + str(self.lamda)
+            + "_"
+            + str(self.num_users)
+            + "u"
+            + "_"
+            + str(self.batch_size)
+            + "b"
+            + "_"
+            + str(self.local_epochs)
+        )
+        if self.algorithm == "pFedMe" or self.algorithm == "pFedMe_p":
+            alg = alg + "_" + str(self.K) + "_" + str(self.personal_learning_rate)
         alg = alg + "_" + str(self.times)
-        if (len(self.rs_glob_acc_per) != 0 & len(self.rs_train_acc_per) & len(self.rs_train_loss_per)):
-            with h5py.File("./results/"+'{}.h5'.format(alg + '_' + post_fix_str, self.local_epochs), 'w') as hf:
-                hf.create_dataset('rs_per_acc', data=self.rs_per_acc)
-                hf.create_dataset('rs_glob_acc', data=self.rs_glob_acc_per)
-                hf.create_dataset('rs_train_acc', data=self.rs_train_acc_per)
-                hf.create_dataset('rs_train_loss', data=self.rs_train_loss_per)
+        if len(self.rs_glob_acc_per) != 0 & len(self.rs_train_acc_per) & len(
+            self.rs_train_loss_per
+        ):
+            with h5py.File(
+                "./results/"
+                + "{}.h5".format(
+                    alg + "_" + post_fix_str,
+                ),
+                "w",
+            ) as hf:
+                hf.create_dataset("rs_per_acc", data=self.rs_per_acc)
+                hf.create_dataset("rs_glob_acc", data=self.rs_glob_acc_per)
+                hf.create_dataset("rs_train_acc", data=self.rs_train_acc_per)
+                hf.create_dataset("rs_train_loss", data=self.rs_train_loss_per)
                 hf.close()
 
     def test(self):
-        '''tests self.latest_model on given clients
-        '''
+        """tests self.latest_model on given clients"""
         num_samples = []
         tot_correct = []
-        losses = []
         for c in self.users:
             ct, ns = c.test()
-            tot_correct.append(ct*1.0)
+            tot_correct.append(ct * 1.0)
             num_samples.append(ns)
         ids = [c.id for c in self.users]
 
         return ids, num_samples, tot_correct
 
     def testBayes(self):
-        '''tests self.latest_model on given clients
-        '''
+        """tests self.latest_model on given clients"""
         num_samples = []
         tot_correct = []
-        losses = []
         for c in self.users:
             ct, ns = c.testBayes()
-            tot_correct.append(ct*1.0)
+            tot_correct.append(ct * 1.0)
             num_samples.append(ns)
         ids = [c.id for c in self.users]
 
         return ids, num_samples, tot_correct
 
     def testpFedbayes(self):
-        '''tests self.latest_model on given clients
-        '''
+        """tests self.latest_model on given clients"""
         num_samples = []
         tot_correct_p = []
         tot_correct_g = []
-        losses = []
         for c in self.users:
             ct_p, ct_g, ns = c.testpFedbayes()
             tot_correct_p.append(ct_p * 1.0)
@@ -202,28 +267,24 @@ class Server:
         return ids, num_samples, tot_correct_p, tot_correct_g
 
     def testSparseBayes(self):
-        '''tests self.latest_model on given clients
-        '''
+        """tests self.latest_model on given clients"""
         num_samples = []
         tot_correct = []
-        losses = []
         for c in self.users:
             ct, ns = c.testSparseBayes()
-            tot_correct.append(ct*1.0)
+            tot_correct.append(ct * 1.0)
             num_samples.append(ns)
         ids = [c.id for c in self.users]
 
         return ids, num_samples, tot_correct
 
     def testpFedSbayes(self):
-        '''tests self.latest_model on given clients
-        '''
+        """tests self.latest_model on given clients"""
         num_samples = []
         tot_correct = []
-        losses = []
         for c in self.users:
             ct, ns = c.testSparseBayes()
-            tot_correct.append(ct*1.0)
+            tot_correct.append(ct * 1.0)
             num_samples.append(ns)
         ids = [c.id for c in self.users]
 
@@ -235,9 +296,9 @@ class Server:
         losses = []
         for c in self.users:
             ct, cl, ns = c.train_error_and_loss()
-            tot_correct.append(ct*1.0)
+            tot_correct.append(ct * 1.0)
             num_samples.append(ns)
-            losses.append(cl*1.0)
+            losses.append(cl * 1.0)
 
         ids = [c.id for c in self.users]
         # groups = [c.group for c in self.clients]
@@ -305,13 +366,12 @@ class Server:
         return ids, num_samples, tot_correct, losses
 
     def test_persionalized_model(self):
-        '''tests self.latest_model on given clients
-        '''
+        """tests self.latest_model on given clients"""
         num_samples = []
         tot_correct = []
         for c in self.users:
             ct, ns = c.test_persionalized_model()
-            tot_correct.append(ct*1.0)
+            tot_correct.append(ct * 1.0)
             num_samples.append(ns)
         ids = [c.id for c in self.users]
 
@@ -323,9 +383,9 @@ class Server:
         losses = []
         for c in self.users:
             ct, cl, ns = c.train_error_and_loss_persionalized_model()
-            tot_correct.append(ct*1.0)
+            tot_correct.append(ct * 1.0)
             num_samples.append(ns)
-            losses.append(cl*1.0)
+            losses.append(cl * 1.0)
 
         ids = [c.id for c in self.users]
         # groups = [c.group for c in self.clients]
@@ -335,11 +395,12 @@ class Server:
     def evaluate(self):
         stats = self.test()
         stats_train = self.train_error_and_loss()
-        glob_acc = np.sum(stats[2])*1.0/np.sum(stats[1])
-        train_acc = np.sum(stats_train[2])*1.0/np.sum(stats_train[1])
+        glob_acc = np.sum(stats[2]) * 1.0 / np.sum(stats[1])
+        train_acc = np.sum(stats_train[2]) * 1.0 / np.sum(stats_train[1])
         # train_loss = np.dot(stats_train[3], stats_train[1])*1.0/np.sum(stats_train[1])
-        train_loss = sum([x * y for (x, y) in zip(stats_train[1],
-                         stats_train[3])]) / np.sum(stats_train[1])
+        train_loss = sum(
+            [x * y for (x, y) in zip(stats_train[1], stats_train[3])]
+        ) / np.sum(stats_train[1])
         self.rs_glob_acc.append(glob_acc)
         self.rs_train_acc.append(train_acc)
         self.rs_train_loss.append(train_loss)
@@ -351,11 +412,12 @@ class Server:
     def evaluate_personalized_model(self):
         stats = self.test_persionalized_model()
         stats_train = self.train_error_and_loss_persionalized_model()
-        glob_acc = np.sum(stats[2])*1.0/np.sum(stats[1])
-        train_acc = np.sum(stats_train[2])*1.0/np.sum(stats_train[1])
+        glob_acc = np.sum(stats[2]) * 1.0 / np.sum(stats[1])
+        train_acc = np.sum(stats_train[2]) * 1.0 / np.sum(stats_train[1])
         # train_loss = np.dot(stats_train[3], stats_train[1])*1.0/np.sum(stats_train[1])
-        train_loss = sum([x * y for (x, y) in zip(stats_train[1],
-                         stats_train[3])]) / np.sum(stats_train[1])
+        train_loss = sum(
+            [x * y for (x, y) in zip(stats_train[1], stats_train[3])]
+        ) / np.sum(stats_train[1])
         self.rs_glob_acc_per.append(glob_acc)
         self.rs_train_acc_per.append(train_acc)
         self.rs_train_loss_per.append(train_loss)
@@ -375,11 +437,12 @@ class Server:
         for c in self.users:
             c.update_parameters(c.local_model)
 
-        glob_acc = np.sum(stats[2])*1.0/np.sum(stats[1])
-        train_acc = np.sum(stats_train[2])*1.0/np.sum(stats_train[1])
+        glob_acc = np.sum(stats[2]) * 1.0 / np.sum(stats[1])
+        train_acc = np.sum(stats_train[2]) * 1.0 / np.sum(stats_train[1])
 
-        train_loss = sum([x * y for (x, y) in zip(stats_train[1],
-                         stats_train[3])]).item() / np.sum(stats_train[1])
+        train_loss = sum(
+            [x * y for (x, y) in zip(stats_train[1], stats_train[3])]
+        ).item() / np.sum(stats_train[1])
         self.rs_glob_acc_per.append(glob_acc)
         self.rs_train_acc_per.append(train_acc)
         self.rs_train_loss_per.append(train_loss)

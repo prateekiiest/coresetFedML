@@ -5,9 +5,21 @@ Implementation of Accelerated Iterative Thresholding
 import numpy as np
 import torch
 
+
 class BaseAIHT:
-    def __init__(self, y, A, w, K, L=None, is_sparse=False, support=None , tol=1e-5, max_iter_num=300):
-        self.y =y
+    def __init__(
+        self,
+        y,
+        A,
+        w,
+        K,
+        L=None,
+        is_sparse=False,
+        support=None,
+        tol=1e-5,
+        max_iter_num=300,
+    ):
+        self.y = y
         self.A = A
         self.w = w
         self.K = K
@@ -16,8 +28,6 @@ class BaseAIHT:
         self.support = support
         self.tol = tol
         self.max_iter_num = max_iter_num
-
-
 
 
 def restore_selected_support(w_projected, selected_support, N):
@@ -40,17 +50,29 @@ def project_w_to_k_sparse(w, selected_support):
 
 def project_w_to_l_constrained(w_selected, L):
     accumulate = torch.cumsum(w_selected, dim=0)
-    rho = torch.argmax(w_selected > (accumulate - L) / torch.arange(1, len(w_selected) + 1))
-    tau = (w_selected[:rho+1].sum() - L) / (rho + 1)
+    rho = torch.argmax(
+        w_selected > (accumulate - L) / torch.arange(1, len(w_selected) + 1)
+    )
+    tau = (w_selected[: rho + 1].sum() - L) / (rho + 1)
     w_projected = w_selected - tau
     w_projected = w_projected.clamp(min=0)
     return w_projected
 
 
-
 class AcceleratedIHT(BaseAIHT):
-    def __init__(self, y, A, w, K, L=None, is_sparse=False, support=None , tol=1e-5, max_iter_num=300):
-        super().__init__(y, A, w, K, L,is_sparse, support, tol, max_iter_num)
+    def __init__(
+        self,
+        y,
+        A,
+        w,
+        K,
+        L=None,
+        is_sparse=False,
+        support=None,
+        tol=1e-5,
+        max_iter_num=300,
+    ):
+        super().__init__(y, A, w, K, L, is_sparse, support, tol, max_iter_num)
 
         """
         The optimization objective is
@@ -62,8 +84,7 @@ class AcceleratedIHT(BaseAIHT):
                         L is a positive number.
         """
 
-
-        self.y =y
+        self.y = y
         self.A = A
         self.w = w
         self.K = K
@@ -72,7 +93,6 @@ class AcceleratedIHT(BaseAIHT):
         self.support = support
         self.tol = tol
         self.max_iter_num = max_iter_num
-
 
     def iterative_hardThresholdingObj(self):
         """
@@ -84,8 +104,7 @@ class AcceleratedIHT(BaseAIHT):
         """
         return np.linalg.norm(self.y - self.A.dot(self.w), ord=2)
 
-
-    def l2_projection_torch_2(self,w,K, is_sparse=False,support = None, L=None):
+    def l2_projection_torch_2(self, w, K, is_sparse=False, support=None, L=None):
         """
         If L is None, project w to the K-sparsity constrained and non-negative region;
         if L is not None, project w the K-sparsity constrained, non-negative and the sum(w) = L region;
@@ -103,8 +122,7 @@ class AcceleratedIHT(BaseAIHT):
         self.w = w
         self.K = K
         self.L = L
-        device, dtype, N = self.w.device, self.w.dtype, self.w.shape[0]
-
+        _device, _dtype, N = self.w.device, self.w.dtype, self.w.shape[0]
 
         if self.L is None:
             if self.is_sparse:
@@ -126,11 +144,7 @@ class AcceleratedIHT(BaseAIHT):
             w_projected = restore_selected_support(w_projected, self.support, N)
             return w_projected, self.support
 
-
-
-
-
-    def l2_projection_numpy(self,w,K, is_sparse=False,support = None, L=None):
+    def l2_projection_numpy(self, w, K, is_sparse=False, support=None, L=None):
         """
         If L is None, project w to the K-sparsity constrained and non-negative region;
         if L is not None, project w the K-sparsity constrained, non-negative and the sum(w) = L region;
@@ -158,8 +172,10 @@ class AcceleratedIHT(BaseAIHT):
                 index_w = np.flip(np.argsort(np.squeeze(self.w)))
                 index_w = np.squeeze(index_w).tolist()
                 w_projected = np.zeros([N, 1])
-                selected_support = index_w[0:self.K]
-                w_projected[selected_support] = self.w[index_w[0:self.K]]  # projection
+                selected_support = index_w[0 : self.K]
+                w_projected[selected_support] = self.w[
+                    index_w[0 : self.K]
+                ]  # projection
                 w_projected[w_projected < 0] = 0  # truncate negative entries
                 return w_projected, selected_support
         else:
@@ -168,7 +184,7 @@ class AcceleratedIHT(BaseAIHT):
             else:
                 index_w = np.flip(np.argsort(np.squeeze(self.w)))
                 index_w = np.squeeze(index_w).tolist()
-                K_sparse_supp = index_w[:self.K]
+                index_w[: self.K]
                 w_selected = self.w[self.support]
 
             w_projected = np.zeros([N, 1])
@@ -181,13 +197,11 @@ class AcceleratedIHT(BaseAIHT):
                     rho = j
                 else:
                     break
-            tau = (w_selected[:(rho + 1)].sum() - self.L) / (rho + 1)
+            tau = (w_selected[: (rho + 1)].sum() - self.L) / (rho + 1)
             w_selected = w_selected - tau
             w_selected[w_selected < 0] = 0
             w_projected[self.support] = w_selected
             return w_projected, self.support
-
-
 
     def a_iht_i(self):
         """
@@ -203,7 +217,7 @@ class AcceleratedIHT(BaseAIHT):
         """
         (M, N) = self.A.shape
         if len(self.y.shape) != 2:
-            raise ValueError('y should have shape (M, 1)')
+            raise ValueError("y should have shape (M, 1)")
 
         # Initialize transpose of measurement matrix
         A_t = self.A.T
@@ -231,9 +245,13 @@ class AcceleratedIHT(BaseAIHT):
                 der = A_t.dot(res)  # compute gradient
             A_w_prev = A_w_cur
             complementary_Yi[Y_i] = 0
-            ind_der = np.flip(np.argsort(np.absolute(np.squeeze(der * complementary_Yi))))
+            ind_der = np.flip(
+                np.argsort(np.absolute(np.squeeze(der * complementary_Yi)))
+            )
             complementary_Yi[Y_i] = 1
-            S_i = Y_i + np.squeeze(ind_der[0:self.K]).tolist()  # identify active subspace
+            S_i = (
+                Y_i + np.squeeze(ind_der[0 : self.K]).tolist()
+            )  # identify active subspace
             ider = der[S_i]
             Pder = self.A[:, S_i].dot(ider)
             mu_bar = ider.T.dot(ider) / Pder.T.dot(Pder) / 2  # step size selection
@@ -257,17 +275,21 @@ class AcceleratedIHT(BaseAIHT):
             y_cur = w_cur + tau * (w_cur - w_prev)
             Y_i = np.nonzero(y_cur)[0].tolist()
 
-         
             # stop criterion
-            if i > 1 and (np.linalg.norm(w_cur - w_prev) < self.tol * np.linalg.norm(w_cur)):
+            if i > 1 and (
+                np.linalg.norm(w_cur - w_prev) < self.tol * np.linalg.norm(w_cur)
+            ):
                 break
             i = i + 1
 
         # finished
         w = w_cur
         supp = np.nonzero(w_cur)[0].tolist()  # support of the output solution
-        print('Stopped at iteration {}. {} items are selected. The objective value is: {}'.format(i, len(supp),
-                                                                                                self.iterative_hardThresholdingObj()))
+        print(
+            "Stopped at iteration {}. {} items are selected. The objective value is: {}".format(
+                i, len(supp), self.iterative_hardThresholdingObj()
+            )
+        )
         return w, supp
 
     def a_iht_ii(self):
@@ -284,7 +306,7 @@ class AcceleratedIHT(BaseAIHT):
         """
         (M, N) = self.A.shape
         if len(self.y.shape) != 2:
-            raise ValueError('y should have shape (M, 1)')
+            raise ValueError("y should have shape (M, 1)")
         # Initialize transpose of measurement matrix
         A_t = self.A.T
 
@@ -312,9 +334,13 @@ class AcceleratedIHT(BaseAIHT):
 
             A_w_prev = A_w_cur
             complementary_Yi[Y_i] = 0
-            ind_der = np.flip(np.argsort(np.absolute(np.squeeze(der * complementary_Yi))))
+            ind_der = np.flip(
+                np.argsort(np.absolute(np.squeeze(der * complementary_Yi)))
+            )
             complementary_Yi[Y_i] = 1
-            S_i = Y_i + np.squeeze(ind_der[0:self.K]).tolist()  # identify active subspace
+            S_i = (
+                Y_i + np.squeeze(ind_der[0 : self.K]).tolist()
+            )  # identify active subspace
             ider = der[S_i]
             Pder = self.A[:, S_i].dot(ider)
             mu_bar = ider.T.dot(ider) / Pder.T.dot(Pder) / 2  # step size selection
@@ -328,7 +354,9 @@ class AcceleratedIHT(BaseAIHT):
             Pder = self.A[:, X_i].dot(ider)
             mu_bar = ider.T.dot(ider) / Pder.T.dot(Pder) / 2  # step size selection
             w_cur[X_i] = w_cur[X_i] + mu_bar * ider  # debias
-            w_cur, _ = self.l2_projection_numpy(w_cur, self.K, is_sparse=True, support=X_i, L=self.L)
+            w_cur, _ = self.l2_projection_numpy(
+                w_cur, self.K, is_sparse=True, support=X_i, L=self.L
+            )
 
             A_w_cur = self.A[:, X_i].dot(w_cur[X_i])
             res = self.y - A_w_cur
@@ -347,17 +375,21 @@ class AcceleratedIHT(BaseAIHT):
             y_cur = w_cur + tau * (w_cur - w_prev)
             Y_i = np.nonzero(y_cur)[0].tolist()
 
-      
             # stop criterion
-            if (i > 1) and (np.linalg.norm(w_cur - w_prev) < self.tol * np.linalg.norm(w_cur)):
+            if (i > 1) and (
+                np.linalg.norm(w_cur - w_prev) < self.tol * np.linalg.norm(w_cur)
+            ):
                 break
             i = i + 1
 
         # finished
         w = w_cur
         supp = np.nonzero(w_cur)[0].tolist()  # support of the output solution
-        print('Stopped at iteration {}. {} items are selected. The objective value is: {}'.format(i, len(supp),
-                                                                                                self.iterative_hardThresholdingObj()))
+        print(
+            "Stopped at iteration {}. {} items are selected. The objective value is: {}".format(
+                i, len(supp), self.iterative_hardThresholdingObj()
+            )
+        )
         return w, supp
 
     def accelrated_IHT_II(self):
@@ -371,7 +403,7 @@ class AcceleratedIHT(BaseAIHT):
         :return: w: torch.tensor of shape (N, 1)
                 supp: list of integer indexes (the support of the w)
         """
-        
+
         (M, N) = self.A.shape
         # Initialize transpose of measurement matrix
         A_t = self.A.T
@@ -379,7 +411,9 @@ class AcceleratedIHT(BaseAIHT):
         current_weights = torch.zeros([N, 1], dtype=self.y.dtype, device=self.y.device)
         current_ys = torch.zeros([N, 1], dtype=self.y.dtype)
 
-        A_current_weights = torch.zeros([M, 1], dtype=self.y.dtype, device=self.y.device)
+        A_current_weights = torch.zeros(
+            [M, 1], dtype=self.y.dtype, device=self.y.device
+        )
         Y_i = []
 
         # auxiliary variables
@@ -400,7 +434,7 @@ class AcceleratedIHT(BaseAIHT):
             ind_der = torch.argsort(torch.abs((der * Yi_bar).squeeze()))
             ind_der = ind_der.flip(0)
             Yi_bar[Y_i] = 1
-            S_i = Y_i + (ind_der[:self.K]).squeeze().tolist()
+            S_i = Y_i + (ind_der[: self.K]).squeeze().tolist()
             ider = der[S_i]
             Pder = self.A[:, S_i].mm(ider)
             mu_bar = ider.T.mm(ider) / Pder.T.mm(Pder) / 2
@@ -414,7 +448,9 @@ class AcceleratedIHT(BaseAIHT):
             Pder = self.A[:, X_i].mm(ider)
             mu_bar = ider.T.mm(ider) / Pder.T.mm(Pder) / 2
             current_weights[X_i] = current_weights[X_i] + mu_bar * ider
-            current_weights, _ = self.l2_projection_torch_2(current_weights, self.K, self.is_sparse==True, support=X_i, L=self.L)
+            current_weights, _ = self.l2_projection_torch_2(
+                current_weights, self.K, self.is_sparse is True, support=X_i, L=self.L
+            )
 
             A_current_weights = self.A[:, X_i].mm(current_weights[X_i])
             res = self.y - A_current_weights
@@ -432,15 +468,23 @@ class AcceleratedIHT(BaseAIHT):
             if isinstance(Y_i, int):
                 Y_i = [Y_i]
 
-
             # stop criterion
-            if (i > 1) and (torch.norm(current_weights - previous_weights) < self.tol * torch.norm(current_weights)):
+            if (i > 1) and (
+                torch.norm(current_weights - previous_weights)
+                < self.tol * torch.norm(current_weights)
+            ):
                 break
 
         w = current_weights
-        supp = current_weights.squeeze().nonzero().squeeze().tolist()  # support of the output solution
+        supp = (
+            current_weights.squeeze().nonzero().squeeze().tolist()
+        )  # support of the output solution
         if isinstance(supp, int):
             supp = [supp]
         obj_value = torch.norm(self.y - self.A.mm(current_weights))
-        print('Stopped at iteration {}. {} items are selected. The objective value is: {}'.format(i, len(supp), obj_value))
+        print(
+            "Stopped at iteration {}. {} items are selected. The objective value is: {}".format(
+                i, len(supp), obj_value
+            )
+        )
         return w, supp
