@@ -1,0 +1,73 @@
+========================================================================
+  dataset             : Mnist
+  method              : pfedbayes
+  num_users           : 10
+  clients_per_round   : 10
+  num_glob_iters      : 40
+  local_rounds        : 5
+  batch_size          : 100
+  mc                  : 3
+  lr                  : 0.001
+  personal_lr         : 0.001
+  beta                : 1.0
+  zeta                : 10.0
+  coreset_frac        : 0.5
+  coreset_S           : 50
+  coreset_outer_steps : 3
+  coreset_iters       : 300
+  coreset_tol         : 0.01
+  output_dim          : 10
+  hidden_dim          : 100
+  seed                : 1
+  device              : cpu
+  tag                 : Mnist_pfedbayes_frac0.5_z10.0_u10_b100_seed1
+========================================================================
+train data dist:
+ [999, 999, 999, 999, 999, 999, 999, 999, 999, 999]
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/transformers/utils/generic.py:482: UserWarning: torch.utils._pytree._register_pytree_node is deprecated. Please use torch.utils._pytree.register_pytree_node instead.
+  _torch_pytree._register_pytree_node(
+[server] 10 clients | method=pfedbayes | coreset_frac=0.5
+rounds:   0%|          | 0/40 [00:00<?, ?it/s][round   0] per_acc=0.1226 glob_acc=0.0977 train_acc=0.0816 train_loss=2.533 kl(q_w||q)=nan
+rounds:   2%|▎         | 1/40 [00:19<12:36, 19.41s/it][round   1] per_acc=0.9496 glob_acc=0.4431 train_acc=0.9536 train_loss=0.168 kl(q_w||q)=nan
+rounds:   5%|▌         | 2/40 [00:39<12:31, 19.78s/it][round   2] per_acc=0.9541 glob_acc=0.5040 train_acc=0.9574 train_loss=0.209 kl(q_w||q)=nan
+rounds:   8%|▊         | 3/40 [00:59<12:09, 19.71s/it][round   3] per_acc=0.9431 glob_acc=0.6065 train_acc=0.9556 train_loss=0.249 kl(q_w||q)=nan
+rounds:  10%|█         | 4/40 [01:18<11:50, 19.73s/it][round   4] per_acc=0.9454 glob_acc=0.6604 train_acc=0.9535 train_loss=0.241 kl(q_w||q)=nan
+rounds:  12%|█▎        | 5/40 [01:40<11:53, 20.37s/it][round   5] per_acc=0.9484 glob_acc=0.6619 train_acc=0.9542 train_loss=0.236 kl(q_w||q)=nan
+rounds:  15%|█▌        | 6/40 [02:01<11:37, 20.51s/it][round   6] per_acc=0.9469 glob_acc=0.7058 train_acc=0.9555 train_loss=0.220 kl(q_w||q)=nan
+rounds:  18%|█▊        | 7/40 [02:20<11:06, 20.21s/it][round   7] per_acc=0.9489 glob_acc=0.7281 train_acc=0.9572 train_loss=0.208 kl(q_w||q)=nan
+rounds:  20%|██        | 8/40 [02:39<10:31, 19.75s/it][round   8] per_acc=0.9554 glob_acc=0.7742 train_acc=0.9573 train_loss=0.192 kl(q_w||q)=nan
+rounds:  22%|██▎       | 9/40 [02:57<09:58, 19.31s/it][round   9] per_acc=0.9534 glob_acc=0.7629 train_acc=0.9610 train_loss=0.178 kl(q_w||q)=nan
+rounds:  25%|██▌       | 10/40 [03:16<09:29, 18.99s/it][round  10] per_acc=0.9581 glob_acc=0.7810 train_acc=0.9637 train_loss=0.171 kl(q_w||q)=nan
+rounds:  28%|██▊       | 11/40 [03:34<09:04, 18.79s/it][round  11] per_acc=0.9589 glob_acc=0.7787 train_acc=0.9645 train_loss=0.184 kl(q_w||q)=nan
+rounds:  30%|███       | 12/40 [03:52<08:41, 18.61s/it][round  12] per_acc=0.9619 glob_acc=0.8053 train_acc=0.9643 train_loss=0.168 kl(q_w||q)=nan
+rounds:  32%|███▎      | 13/40 [04:10<08:16, 18.38s/it][round  13] per_acc=0.9607 glob_acc=0.8053 train_acc=0.9656 train_loss=0.158 kl(q_w||q)=nan
+rounds:  35%|███▌      | 14/40 [04:28<07:58, 18.40s/it][round  14] per_acc=0.9602 glob_acc=0.8409 train_acc=0.9670 train_loss=0.145 kl(q_w||q)=nan
+rounds:  38%|███▊      | 15/40 [04:47<07:38, 18.32s/it][round  15] per_acc=0.9596 glob_acc=0.8201 train_acc=0.9630 train_loss=0.148 kl(q_w||q)=nan
+rounds:  40%|████      | 16/40 [05:05<07:17, 18.22s/it][round  16] per_acc=0.9604 glob_acc=0.8386 train_acc=0.9706 train_loss=0.150 kl(q_w||q)=nan
+rounds:  42%|████▎     | 17/40 [05:24<07:10, 18.73s/it][round  17] per_acc=0.9647 glob_acc=0.8050 train_acc=0.9683 train_loss=0.134 kl(q_w||q)=nan
+rounds:  45%|████▌     | 18/40 [05:43<06:52, 18.76s/it][round  18] per_acc=0.9629 glob_acc=0.8185 train_acc=0.9684 train_loss=0.131 kl(q_w||q)=nan
+rounds:  48%|████▊     | 19/40 [06:02<06:34, 18.78s/it][round  19] per_acc=0.9649 glob_acc=0.8341 train_acc=0.9707 train_loss=0.130 kl(q_w||q)=nan
+rounds:  50%|█████     | 20/40 [06:20<06:12, 18.62s/it][round  20] per_acc=0.9654 glob_acc=0.8436 train_acc=0.9726 train_loss=0.128 kl(q_w||q)=nan
+rounds:  52%|█████▎    | 21/40 [06:39<05:51, 18.52s/it][round  21] per_acc=0.9677 glob_acc=0.8281 train_acc=0.9710 train_loss=0.125 kl(q_w||q)=nan
+rounds:  55%|█████▌    | 22/40 [06:58<05:37, 18.76s/it][round  22] per_acc=0.9662 glob_acc=0.8591 train_acc=0.9717 train_loss=0.119 kl(q_w||q)=nan
+rounds:  57%|█████▊    | 23/40 [07:18<05:25, 19.13s/it][round  23] per_acc=0.9679 glob_acc=0.8361 train_acc=0.9725 train_loss=0.116 kl(q_w||q)=nan
+rounds:  60%|██████    | 24/40 [07:38<05:11, 19.45s/it][round  24] per_acc=0.9667 glob_acc=0.8644 train_acc=0.9740 train_loss=0.114 kl(q_w||q)=nan
+rounds:  62%|██████▎   | 25/40 [07:58<04:52, 19.49s/it][round  25] per_acc=0.9649 glob_acc=0.8321 train_acc=0.9740 train_loss=0.116 kl(q_w||q)=nan
+rounds:  65%|██████▌   | 26/40 [08:18<04:37, 19.82s/it][round  26] per_acc=0.9614 glob_acc=0.8301 train_acc=0.9744 train_loss=0.114 kl(q_w||q)=nan
+rounds:  68%|██████▊   | 27/40 [08:38<04:16, 19.71s/it][round  27] per_acc=0.9591 glob_acc=0.8539 train_acc=0.9745 train_loss=0.113 kl(q_w||q)=nan
+rounds:  70%|███████   | 28/40 [08:56<03:52, 19.40s/it][round  28] per_acc=0.9679 glob_acc=0.8491 train_acc=0.9743 train_loss=0.106 kl(q_w||q)=nan
+rounds:  72%|███████▎  | 29/40 [09:16<03:34, 19.49s/it][round  29] per_acc=0.9664 glob_acc=0.8684 train_acc=0.9754 train_loss=0.103 kl(q_w||q)=nan
+rounds:  75%|███████▌  | 30/40 [09:36<03:15, 19.59s/it][round  30] per_acc=0.9662 glob_acc=0.8830 train_acc=0.9751 train_loss=0.105 kl(q_w||q)=nan
+rounds:  78%|███████▊  | 31/40 [10:01<03:10, 21.15s/it][round  31] per_acc=0.9697 glob_acc=0.8697 train_acc=0.9784 train_loss=0.099 kl(q_w||q)=nan
+rounds:  80%|████████  | 32/40 [10:28<03:04, 23.04s/it][round  32] per_acc=0.9689 glob_acc=0.8654 train_acc=0.9773 train_loss=0.101 kl(q_w||q)=nan
+rounds:  82%|████████▎ | 33/40 [10:49<02:37, 22.49s/it][round  33] per_acc=0.9722 glob_acc=0.8752 train_acc=0.9788 train_loss=0.100 kl(q_w||q)=nan
+rounds:  85%|████████▌ | 34/40 [11:09<02:09, 21.50s/it][round  34] per_acc=0.9722 glob_acc=0.8792 train_acc=0.9792 train_loss=0.093 kl(q_w||q)=nan
+rounds:  88%|████████▊ | 35/40 [11:28<01:43, 20.73s/it][round  35] per_acc=0.9649 glob_acc=0.8744 train_acc=0.9797 train_loss=0.094 kl(q_w||q)=nan
+rounds:  90%|█████████ | 36/40 [11:47<01:21, 20.44s/it][round  36] per_acc=0.9714 glob_acc=0.8845 train_acc=0.9810 train_loss=0.093 kl(q_w||q)=nan
+rounds:  92%|█████████▎| 37/40 [12:09<01:02, 20.88s/it][round  37] per_acc=0.9709 glob_acc=0.8782 train_acc=0.9807 train_loss=0.090 kl(q_w||q)=nan
+rounds:  95%|█████████▌| 38/40 [12:29<00:41, 20.67s/it][round  38] per_acc=0.9719 glob_acc=0.8699 train_acc=0.9794 train_loss=0.088 kl(q_w||q)=nan
+rounds:  98%|█████████▊| 39/40 [12:49<00:20, 20.23s/it][round  39] per_acc=0.9737 glob_acc=0.8679 train_acc=0.9805 train_loss=0.088 kl(q_w||q)=nan
+rounds: 100%|██████████| 40/40 [13:09<00:00, 20.23s/it]rounds: 100%|██████████| 40/40 [13:09<00:00, 19.73s/it]
+[round  40] per_acc=0.9724 glob_acc=0.9702 train_acc=0.9812 train_loss=0.092 kl(q_w||q)=nan
+[server] results -> results/Mnist_pfedbayes_frac0.5_z10.0_u10_b100_seed1.h5
+done -> results/Mnist_pfedbayes_frac0.5_z10.0_u10_b100_seed1.h5

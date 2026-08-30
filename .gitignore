@@ -3,7 +3,8 @@ MNIST/*
 train/*
 test/*
 _torchvision/
-results/
+results/*
+!results/logs/
 **/__pycache__/
 *.pyc
 src/experiments/riemann_linear_regression/out/
