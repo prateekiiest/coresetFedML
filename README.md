@@ -155,15 +155,6 @@ array: `--prices2018 prices2018.npy`
 * One `ClientUpdate` (R local reparam-SGD rounds) per A-IHT invocation; a few
   outer `(ClientUpdate → A-IHT)` steps per communication round.
 
-## Known gaps
-
-* The `smoke` preset numbers are not the paper's; use `paper` / larger
-  `--per_class`, `--seeds`.
-* Table 1's external baselines (FedAvg, BNFed, pFedMe, perFedAvg) are not
-  re-implemented — only PFedBayes, RandomSubset and CoreSet-PFedBayes.
-* Medical Table 2 defaults to OCTMNIST; COVID / APTOS need a manual download.
-* Fig. 2 / 3 use synthetic spatial data unless `--prices2018` is supplied.
-
 ------------------------------
 
 ### Citation
