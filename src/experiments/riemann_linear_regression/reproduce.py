@@ -142,7 +142,12 @@ def main():
     ap.add_argument("--n_bases", type=int, default=100)
     ap.add_argument("--proj_dim", type=int, default=100)
     ap.add_argument("--seed", type=int, default=2020)
-    ap.add_argument("--prices2018", default="")
+    ap.add_argument(
+        "--prices2018",
+        default="src/experiments/riemann_linear_regression/data/prices2018.npy",
+        help="real [lat, lon, price] array; falls back to synthetic if missing "
+        "(build it with `python scripts/download_datasets.py prices2018`)",
+    )
     ap.add_argument("--outdir", default="src/experiments/riemann_linear_regression/out")
     ap.add_argument("--sizes", type=int, nargs="+", default=[220, 260, 300])
     a = ap.parse_args()

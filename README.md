@@ -76,6 +76,22 @@ helps only at large `--num_users` / high `--mc`.
 
 ------------------------------
 
+## Datasets
+
+| Dataset | Used for | How to get it |
+|---|---|---|
+| MNIST · FashionMNIST · CIFAR-10 | Table 1 / 3, Fig. 3–5 | `python scripts/download_datasets.py benchmark` (torchvision, auto) |
+| OCTMNIST | Table 2 | `python scripts/download_datasets.py octmnist` (`medmnist`, auto) |
+| UK Price Paid 2018 | Fig. 2, Fig. 3-left | `python scripts/download_datasets.py prices2018` (gov.uk CSV + postcodes.io geocoding, auto) |
+| COVID-19 Radiography Database | Table 2 | `python scripts/download_datasets.py covid` — needs `~/.kaggle/kaggle.json` |
+| APTOS 2019 Blindness Detection | Table 2 | `python scripts/download_datasets.py aptos` — needs a Kaggle token + accepted competition rules |
+
+`python scripts/download_datasets.py all` fetches everything that needs no
+credentials. The per-experiment sections below also generate their own data if
+you skip this step.
+
+------------------------------
+
 ## 1. Benchmark experiments — Table 1 / 3, Fig. 3–5
 
 **Quick sanity check** (CPU, ≈30 s): generate data, run all three methods,
@@ -128,20 +144,24 @@ python -m src.experiments.medical.run_medical --seeds 3
 `--methods full random logdet dispsum dispmin coreset` selects which rows to
 produce; output goes to `results/table2_octmnist.txt` (class-wise mean ± std).
 
-For **COVID-19 Radiography Database** / **APTOS 2019 Blindness Detection**,
-arrange the images as an `ImageFolder` (`<root>/<class_name>/*.png`) and point
-the loader at it — the rest of the pipeline is unchanged:
+For **COVID-19 Radiography Database** / **APTOS 2019 Blindness Detection**
+(Kaggle token required):
 
 ```bash
-python -m utils.medical_data --name covid --image_root /path/to/covid_imagefolder
+python scripts/download_datasets.py covid          # -> data/medical_src/covid/...
+python -m utils.medical_data --name covid --image_root data/medical_src/covid/COVID-19_Radiography_Dataset
 python -m src.experiments.medical.run_medical --name covid --seeds 3
 ```
+
+Any `ImageFolder` layout (`<root>/<class_name>/*.png`) works with
+`--image_root`; the rest of the pipeline is unchanged.
 
 ------------------------------
 
 ## 3. Vanilla Bayesian coresets — Fig. 2, Fig. 3-left
 
 ```bash
+python scripts/download_datasets.py prices2018          # UK Price Paid 2018 -> [lat, lon, price]
 python -m src.experiments.riemann_linear_regression.reproduce --trials 10 --M 300
 ```
 
@@ -150,10 +170,12 @@ Outputs in `src/experiments/riemann_linear_regression/out/`:
 * `fig3_kl.png` — forward `KL(π̂_w ‖ π)` vs coreset size for GIGA / A-IHT / A-IHT II / Uniform
 * `fig2_coreset_points.png` — selected coreset points sized by weight for `k ∈ {220,260,300}`
 
-A synthetic 2-D spatial regression is used by default. To use the UK
-house-price data from the paper, supply a preprocessed `[lat, lon, price]`
-array: `--prices2018 prices2018.npy`
-(source: <https://www.gov.uk/government/statistical-data-sets/price-paid-data-downloads>).
+`reproduce.py` uses
+`src/experiments/riemann_linear_regression/data/prices2018.npy` if present
+(built by the download script from the gov.uk
+[Price Paid Data](https://www.gov.uk/government/statistical-data-sets/price-paid-data-downloads)
++ postcodes.io geocoding), otherwise it falls back to a synthetic 2-D spatial
+regression. Pass `--prices2018 <path>` to point elsewhere.
 
 ------------------------------
 
