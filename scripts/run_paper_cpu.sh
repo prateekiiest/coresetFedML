@@ -10,10 +10,10 @@ COMMON="--dataset $DS --device cpu --num_users 10 --clients_per_round 10 \
   --coreset_S 50 --coreset_outer_steps 3 --coreset_iters 300 \
   --zeta 10 --learning_rate 1e-3 --personal_learning_rate 1e-3"
 
-mkdir -p results/logs
+mkdir -p logs
 for M in coreset pfedbayes randomsubset; do
   PYTHONUNBUFFERED=1 python3 main.py --method $M --coreset_frac 0.5 $COMMON \
-    > results/logs/${DS}_${M}.log 2>&1 &
+    > logs/${DS}_${M}.log 2>&1 &
 done
 wait
 python3 - "$DS" <<'PY'

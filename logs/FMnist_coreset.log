@@ -1,0 +1,247 @@
+========================================================================
+  dataset             : FMnist
+  method              : coreset
+  num_users           : 10
+  clients_per_round   : 10
+  num_glob_iters      : 40
+  local_rounds        : 5
+  batch_size          : 100
+  mc                  : 3
+  lr                  : 0.001
+  personal_lr         : 0.001
+  beta                : 1.0
+  zeta                : 10.0
+  coreset_frac        : 0.5
+  coreset_S           : 50
+  coreset_outer_steps : 3
+  coreset_iters       : 300
+  coreset_tol         : 0.01
+  output_dim          : 10
+  hidden_dim          : 100
+  seed                : 1
+  device              : cpu
+  tag                 : FMnist_coreset_frac0.5_z10.0_u10_b100_seed1
+========================================================================
+train data dist:
+ [999, 999, 999, 999, 999, 999, 999, 999, 999, 999]
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/transformers/utils/generic.py:482: UserWarning: torch.utils._pytree._register_pytree_node is deprecated. Please use torch.utils._pytree.register_pytree_node instead.
+  _torch_pytree._register_pytree_node(
+[server] 10 clients | method=coreset | coreset_frac=0.5
+rounds:   0%|          | 0/40 [00:00<?, ?it/s][round   0] per_acc=0.0564 glob_acc=0.0629 train_acc=0.0394 train_loss=2.926 kl(q_w||q)=nan
+Stopped at iteration 256. 500 items are selected. The objective value is: 0.001371840799071575
+Stopped at iteration 278. 500 items are selected. The objective value is: 0.0012889954137527354
+Stopped at iteration 216. 500 items are selected. The objective value is: 0.0011440567591436343
+Stopped at iteration 244. 500 items are selected. The objective value is: 0.002148711145373062
+Stopped at iteration 301. 500 items are selected. The objective value is: 0.002235633757588165
+Stopped at iteration 264. 500 items are selected. The objective value is: 0.0009639756878443875
+Stopped at iteration 224. 500 items are selected. The objective value is: 0.0033041730902849094
+Stopped at iteration 301. 500 items are selected. The objective value is: 0.013333840329321861
+Stopped at iteration 301. 500 items are selected. The objective value is: 0.005454130792829929
+Stopped at iteration 301. 500 items are selected. The objective value is: 0.01755170618279385
+Stopped at iteration 301. 500 items are selected. The objective value is: 0.004507395340822051
+Stopped at iteration 301. 500 items are selected. The objective value is: 0.024025744318943797
+Stopped at iteration 213. 500 items are selected. The objective value is: 0.005129896006952638
+Stopped at iteration 193. 500 items are selected. The objective value is: 0.002497521021181875
+Stopped at iteration 144. 500 items are selected. The objective value is: 0.0015923201045272553
+Stopped at iteration 202. 500 items are selected. The objective value is: 0.0012759926939388613
+Stopped at iteration 169. 500 items are selected. The objective value is: 0.0013654146386330513
+Stopped at iteration 136. 500 items are selected. The objective value is: 0.0008763999406501078
+Stopped at iteration 301. 500 items are selected. The objective value is: 0.004746644798250523
+Stopped at iteration 301. 500 items are selected. The objective value is: 0.013103286234200186
+Stopped at iteration 301. 500 items are selected. The objective value is: 0.01744570473000329
+Stopped at iteration 174. 500 items are selected. The objective value is: 0.0012337763054949564
+Stopped at iteration 231. 500 items are selected. The objective value is: 0.0007160216810409884
+Stopped at iteration 241. 500 items are selected. The objective value is: 0.0007749366737698507
+Stopped at iteration 210. 500 items are selected. The objective value is: 0.007766989913548024
+Stopped at iteration 159. 500 items are selected. The objective value is: 0.0018589165118347568
+Stopped at iteration 170. 500 items are selected. The objective value is: 0.0008322825955397344
+Stopped at iteration 185. 500 items are selected. The objective value is: 0.0009858678981255482
+Stopped at iteration 200. 500 items are selected. The objective value is: 0.0009508197853090286
+Stopped at iteration 301. 500 items are selected. The objective value is: 0.0006609534481024395
+rounds:   2%|▎         | 1/40 [01:36<1:03:02, 97.00s/it][round   1] per_acc=0.9391 glob_acc=0.1596 train_acc=0.9540 train_loss=0.133 kl(q_w||q)=5.707
+Stopped at iteration 239. 500 items are selected. The objective value is: 0.001860667889300727
+Stopped at iteration 278. 500 items are selected. The objective value is: 0.002888577283330869
+Stopped at iteration 208. 500 items are selected. The objective value is: 0.0030767485411165715
+Stopped at iteration 115. 500 items are selected. The objective value is: 0.001002159911802771
+Stopped at iteration 177. 500 items are selected. The objective value is: 0.000636462530744153
+Stopped at iteration 225. 500 items are selected. The objective value is: 0.001273737574731925
+Stopped at iteration 179. 500 items are selected. The objective value is: 0.005365859103244557
+Stopped at iteration 162. 500 items are selected. The objective value is: 0.0007243214953654054
+Stopped at iteration 301. 500 items are selected. The objective value is: 0.0026811997495108228
+Stopped at iteration 174. 500 items are selected. The objective value is: 0.0015241337780066205
+Stopped at iteration 223. 500 items are selected. The objective value is: 0.0005035776481941322
+Stopped at iteration 219. 500 items are selected. The objective value is: 0.00023635534266342557
+Stopped at iteration 273. 500 items are selected. The objective value is: 0.003144523389121004
+Stopped at iteration 239. 500 items are selected. The objective value is: 0.0022977320684280217
+Stopped at iteration 193. 500 items are selected. The objective value is: 0.002553363245714796
+Stopped at iteration 187. 500 items are selected. The objective value is: 0.001683965949529983
+Stopped at iteration 143. 500 items are selected. The objective value is: 0.0007801990700584598
+Stopped at iteration 166. 500 items are selected. The objective value is: 0.0025523075436364034
+Stopped at iteration 131. 500 items are selected. The objective value is: 0.0007392819918341087
+Stopped at iteration 122. 500 items are selected. The objective value is: 0.0002674298098203913
+Stopped at iteration 178. 500 items are selected. The objective value is: 0.0006071297716783164
+Stopped at iteration 169. 500 items are selected. The objective value is: 0.0007775343497249018
+Stopped at iteration 133. 500 items are selected. The objective value is: 0.0016308439827458568
+Stopped at iteration 173. 500 items are selected. The objective value is: 0.0006172987012478123
+Stopped at iteration 136. 500 items are selected. The objective value is: 0.0027160137941476545
+Stopped at iteration 183. 500 items are selected. The objective value is: 0.004203039910387535
+Stopped at iteration 236. 500 items are selected. The objective value is: 0.0012217933640610993
+Stopped at iteration 217. 500 items are selected. The objective value is: 0.0009321962489667532
+Stopped at iteration 157. 500 items are selected. The objective value is: 0.0007053057255479893
+Stopped at iteration 198. 500 items are selected. The objective value is: 0.0007104291654992062
+rounds:   5%|▌         | 2/40 [03:10<1:00:17, 95.19s/it][round   2] per_acc=0.9318 glob_acc=0.2393 train_acc=0.9456 train_loss=0.183 kl(q_w||q)=0.599
+Stopped at iteration 215. 500 items are selected. The objective value is: 0.001065366150789581
+Stopped at iteration 214. 500 items are selected. The objective value is: 0.0011058741034835893
+Stopped at iteration 171. 500 items are selected. The objective value is: 0.0008227020129936649
+Stopped at iteration 147. 500 items are selected. The objective value is: 0.0008424438092532469
+Stopped at iteration 149. 500 items are selected. The objective value is: 0.0006800041408058159
+Stopped at iteration 220. 500 items are selected. The objective value is: 0.0012197029781126265
+Stopped at iteration 184. 500 items are selected. The objective value is: 0.0013214145740213052
+Stopped at iteration 207. 500 items are selected. The objective value is: 0.0015451563256323336
+Stopped at iteration 240. 500 items are selected. The objective value is: 0.0009230442320977204
+Stopped at iteration 182. 500 items are selected. The objective value is: 0.0006366857272842465
+Stopped at iteration 187. 500 items are selected. The objective value is: 0.002123534360322435
+Stopped at iteration 256. 500 items are selected. The objective value is: 0.00032378163466961833
+Stopped at iteration 174. 500 items are selected. The objective value is: 0.001658191439604424
+Stopped at iteration 207. 500 items are selected. The objective value is: 0.0020406458773991
+Stopped at iteration 154. 500 items are selected. The objective value is: 0.0010427706793135483
+Stopped at iteration 109. 500 items are selected. The objective value is: 0.0009188134850617245
+Stopped at iteration 108. 500 items are selected. The objective value is: 0.0008445483454559875
+Stopped at iteration 97. 500 items are selected. The objective value is: 0.0007842437156055887
+Stopped at iteration 216. 500 items are selected. The objective value is: 0.00045776808673775554
+Stopped at iteration 144. 500 items are selected. The objective value is: 0.0004648375708145916
+Stopped at iteration 176. 500 items are selected. The objective value is: 0.00044426763754209126
+Stopped at iteration 175. 500 items are selected. The objective value is: 0.0007597088966106287
+Stopped at iteration 214. 500 items are selected. The objective value is: 0.000626670422381873
+Stopped at iteration 155. 500 items are selected. The objective value is: 0.0003775417875914911
+Stopped at iteration 142. 500 items are selected. The objective value is: 0.0090034598790779
+Stopped at iteration 207. 500 items are selected. The objective value is: 0.0018711195151254305
+Stopped at iteration 200. 500 items are selected. The objective value is: 0.0019760275472511897
+Stopped at iteration 228. 500 items are selected. The objective value is: 0.0013078007463939072
+Stopped at iteration 187. 500 items are selected. The objective value is: 0.0007256273077988562
+Stopped at iteration 259. 500 items are selected. The objective value is: 0.000777751627822463
+rounds:   8%|▊         | 3/40 [04:44<58:21, 94.63s/it]  [round   3] per_acc=0.9311 glob_acc=0.3313 train_acc=0.9400 train_loss=0.201 kl(q_w||q)=0.510
+Stopped at iteration 188. 500 items are selected. The objective value is: 0.001270046006419628
+Stopped at iteration 235. 500 items are selected. The objective value is: 0.0019934128398884925
+Stopped at iteration 166. 500 items are selected. The objective value is: 0.0019516829814173067
+Stopped at iteration 159. 500 items are selected. The objective value is: 0.0008478220537334701
+Stopped at iteration 179. 500 items are selected. The objective value is: 0.002244319325126412
+Stopped at iteration 206. 500 items are selected. The objective value is: 0.0009690499586287864
+Stopped at iteration 175. 500 items are selected. The objective value is: 0.0008665688868777377
+Stopped at iteration 171. 500 items are selected. The objective value is: 0.0014637451394215863
+Stopped at iteration 254. 500 items are selected. The objective value is: 0.0008687080441741354
+Stopped at iteration 155. 500 items are selected. The objective value is: 0.0004322477820082141
+Stopped at iteration 205. 500 items are selected. The objective value is: 0.0004331656216492334
+Stopped at iteration 206. 500 items are selected. The objective value is: 0.001538365483503976
+Stopped at iteration 245. 500 items are selected. The objective value is: 0.0036663811210863313
+Stopped at iteration 178. 500 items are selected. The objective value is: 0.0030060946617387063
+Stopped at iteration 158. 500 items are selected. The objective value is: 0.00271866121754544
+Stopped at iteration 108. 500 items are selected. The objective value is: 0.0010949670536338338
+Stopped at iteration 96. 500 items are selected. The objective value is: 0.0005271711423304145
+Stopped at iteration 153. 500 items are selected. The objective value is: 0.0009208648478878828
+Stopped at iteration 112. 500 items are selected. The objective value is: 0.0006420670273554472
+Stopped at iteration 201. 500 items are selected. The objective value is: 0.0005826579554046973
+Stopped at iteration 199. 500 items are selected. The objective value is: 0.000737112984157726
+Stopped at iteration 187. 500 items are selected. The objective value is: 0.0013964244303751162
+Stopped at iteration 187. 500 items are selected. The objective value is: 0.001089989010232318
+Stopped at iteration 132. 500 items are selected. The objective value is: 0.0008891903047546256
+Stopped at iteration 176. 500 items are selected. The objective value is: 0.0014316880831162571
+Stopped at iteration 120. 500 items are selected. The objective value is: 0.004726174794329212
+Stopped at iteration 162. 500 items are selected. The objective value is: 0.0016991685673728326
+Stopped at iteration 152. 500 items are selected. The objective value is: 0.0009239481468026185
+Stopped at iteration 148. 500 items are selected. The objective value is: 0.0014424704365306414
+Stopped at iteration 136. 500 items are selected. The objective value is: 0.0005955415314602778
+rounds:  10%|█         | 4/40 [06:21<57:09, 95.27s/it][round   4] per_acc=0.9353 glob_acc=0.4526 train_acc=0.9404 train_loss=0.198 kl(q_w||q)=0.649
+Stopped at iteration 179. 500 items are selected. The objective value is: 0.001189809649751067
+Stopped at iteration 201. 500 items are selected. The objective value is: 0.0013039024851797668
+Stopped at iteration 166. 500 items are selected. The objective value is: 0.0010129817786193134
+Stopped at iteration 169. 500 items are selected. The objective value is: 0.0017289232784000361
+Stopped at iteration 163. 500 items are selected. The objective value is: 0.005815612761571238
+Stopped at iteration 239. 500 items are selected. The objective value is: 0.0009587624019714772
+Stopped at iteration 177. 500 items are selected. The objective value is: 0.001805557487718935
+Stopped at iteration 163. 500 items are selected. The objective value is: 0.0008290294634885433
+Stopped at iteration 182. 500 items are selected. The objective value is: 0.0014094807278678923
+Stopped at iteration 276. 500 items are selected. The objective value is: 0.0006325735721650743
+Stopped at iteration 262. 500 items are selected. The objective value is: 0.0009713538242021619
+Stopped at iteration 301. 500 items are selected. The objective value is: 0.001054422094508639
+Stopped at iteration 151. 500 items are selected. The objective value is: 0.001967121743917622
+Stopped at iteration 187. 500 items are selected. The objective value is: 0.0020463019767948103
+Stopped at iteration 172. 500 items are selected. The objective value is: 0.0037209780638791895
+Stopped at iteration 105. 500 items are selected. The objective value is: 0.0011370593240980326
+Stopped at iteration 129. 500 items are selected. The objective value is: 0.0006742489775865807
+Stopped at iteration 115. 500 items are selected. The objective value is: 0.0007336788179486759
+Stopped at iteration 130. 500 items are selected. The objective value is: 0.0004542906100336509
+Stopped at iteration 197. 500 items are selected. The objective value is: 0.0004030830027420372
+Stopped at iteration 209. 500 items are selected. The objective value is: 0.0006296620961762532
+Stopped at iteration 164. 500 items are selected. The objective value is: 0.001963994515696752
+Stopped at iteration 149. 500 items are selected. The objective value is: 0.0008912143287515957
+Stopped at iteration 163. 500 items are selected. The objective value is: 0.0011760115809249499
+Stopped at iteration 193. 500 items are selected. The objective value is: 0.0033710975714722016
+Stopped at iteration 148. 500 items are selected. The objective value is: 0.0015512074696651947
+Stopped at iteration 190. 500 items are selected. The objective value is: 0.004678783210238951
+Stopped at iteration 159. 500 items are selected. The objective value is: 0.0010951081503498413
+Stopped at iteration 161. 500 items are selected. The objective value is: 0.0007120841310778962
+Stopped at iteration 188. 500 items are selected. The objective value is: 0.0011073812194258034
+rounds:  12%|█▎        | 5/40 [08:10<58:34, 100.41s/it][round   5] per_acc=0.9368 glob_acc=0.5449 train_acc=0.9461 train_loss=0.197 kl(q_w||q)=1.017
+Stopped at iteration 206. 500 items are selected. The objective value is: 0.0007212653171728445
+Stopped at iteration 222. 500 items are selected. The objective value is: 0.0008796855065819958
+Stopped at iteration 255. 500 items are selected. The objective value is: 0.001133501245276442
+Stopped at iteration 192. 500 items are selected. The objective value is: 0.0020743027765789527
+Stopped at iteration 170. 500 items are selected. The objective value is: 0.0008652385654827984
+Stopped at iteration 250. 500 items are selected. The objective value is: 0.0013646074678313473
+Stopped at iteration 168. 500 items are selected. The objective value is: 0.0005923896077390607
+Stopped at iteration 217. 500 items are selected. The objective value is: 0.0013061131717056007
+Stopped at iteration 236. 500 items are selected. The objective value is: 0.0013060313259472525
+Stopped at iteration 200. 500 items are selected. The objective value is: 0.000744639798877563
+Stopped at iteration 279. 500 items are selected. The objective value is: 0.0005205000752997357
+Stopped at iteration 240. 500 items are selected. The objective value is: 0.0003706886127985191
+Stopped at iteration 160. 500 items are selected. The objective value is: 0.001691348829092192
+Stopped at iteration 165. 500 items are selected. The objective value is: 0.0024295457127806617
+Stopped at iteration 162. 500 items are selected. The objective value is: 0.0019527575916089782
+Stopped at iteration 122. 500 items are selected. The objective value is: 0.0010265117011549899
+Stopped at iteration 101. 500 items are selected. The objective value is: 0.0015204289970480102
+Stopped at iteration 102. 500 items are selected. The objective value is: 0.0012141545644403684
+Stopped at iteration 143. 500 items are selected. The objective value is: 0.0003682290818939978
+Stopped at iteration 214. 500 items are selected. The objective value is: 0.000613618820199252
+Stopped at iteration 211. 500 items are selected. The objective value is: 0.0005326466147222694
+Stopped at iteration 178. 500 items are selected. The objective value is: 0.0009848846054210088
+Stopped at iteration 153. 500 items are selected. The objective value is: 0.0006127741051062119
+Stopped at iteration 197. 500 items are selected. The objective value is: 0.0006996277510761313
+Stopped at iteration 165. 500 items are selected. The objective value is: 0.0019320126269396247
+Stopped at iteration 155. 500 items are selected. The objective value is: 0.0025115659470195933
+Stopped at iteration 205. 500 items are selected. The objective value is: 0.0021051959250286455
+Stopped at iteration 165. 500 items are selected. The objective value is: 0.0008431083022440283
+Stopped at iteration 179. 500 items are selected. The objective value is: 0.0014142795354137156
+Stopped at iteration 180. 500 items are selected. The objective value is: 0.0009809215183904582
+rounds:  15%|█▌        | 6/40 [09:51<57:04, 100.72s/it][round   6] per_acc=0.9404 glob_acc=0.5589 train_acc=0.9518 train_loss=0.191 kl(q_w||q)=1.215
+Stopped at iteration 216. 500 items are selected. The objective value is: 0.0006060154302920278
+Stopped at iteration 173. 500 items are selected. The objective value is: 0.0008849053915857783
+Stopped at iteration 294. 500 items are selected. The objective value is: 0.0009398920297756515
+Stopped at iteration 233. 500 items are selected. The objective value is: 0.0013717393766003257
+Stopped at iteration 220. 500 items are selected. The objective value is: 0.0012789320290850438
+Stopped at iteration 208. 500 items are selected. The objective value is: 0.0008082928279735803
+Stopped at iteration 225. 500 items are selected. The objective value is: 0.0012519713834017127
+Stopped at iteration 202. 500 items are selected. The objective value is: 0.0003493269642732561
+Stopped at iteration 178. 500 items are selected. The objective value is: 0.0014789296409149742
+Stopped at iteration 243. 500 items are selected. The objective value is: 0.0006858954463345272
+Stopped at iteration 301. 500 items are selected. The objective value is: 0.0006765675967268632
+Stopped at iteration 275. 500 items are selected. The objective value is: 0.0009830362219969814
+Stopped at iteration 181. 500 items are selected. The objective value is: 0.003470464252360975
+Stopped at iteration 127. 500 items are selected. The objective value is: 0.0029374774454538214
+Stopped at iteration 152. 500 items are selected. The objective value is: 0.002849489980638169
+Stopped at iteration 95. 500 items are selected. The objective value is: 0.0005382041229989161
+Stopped at iteration 155. 500 items are selected. The objective value is: 0.001727792343863885
+Stopped at iteration 138. 500 items are selected. The objective value is: 0.0007594630960174928
+Stopped at iteration 171. 500 items are selected. The objective value is: 0.00033983205384204924
+Stopped at iteration 184. 500 items are selected. The objective value is: 0.0004553009798270517
+Stopped at iteration 246. 500 items are selected. The objective value is: 0.0004872991303852617
+Stopped at iteration 137. 500 items are selected. The objective value is: 0.001256965971281825
+Stopped at iteration 251. 500 items are selected. The objective value is: 0.0006805208393443487
+Stopped at iteration 182. 500 items are selected. The objective value is: 0.0005322642199041332
+Stopped at iteration 166. 500 items are selected. The objective value is: 0.003066474355095868
+Stopped at iteration 150. 500 items are selected. The objective value is: 0.0017793885620600578
+Stopped at iteration 183. 500 items are selected. The objective value is: 0.0008203607373012451
+Stopped at iteration 163. 500 items are selected. The objective value is: 0.0012144249295316925
+Stopped at iteration 180. 500 items are selected. The objective value is: 0.0016915565435892618
+Stopped at iteration 205. 500 items are selected. The objective value is: 0.001277148437223111
+rounds:  18%|█▊        | 7/40 [11:38<56:22, 102.51s/it][round   7] per_acc=0.9288 glob_acc=0.5850 train_acc=0.9438 train_loss=0.184 kl(q_w||q)=0.919
