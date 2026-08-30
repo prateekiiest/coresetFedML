@@ -2,3 +2,11 @@ data/*
 MNIST/*
 train/*
 test/*
+_torchvision/
+results/
+**/__pycache__/
+*.pyc
+src/experiments/riemann_linear_regression/out/
+src/experiments/**/results/
+*.h5
+.DS_Store

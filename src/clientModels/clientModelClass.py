@@ -1,215 +1,135 @@
+"""
+CoreSet-PFedBayes client  (paper Algorithm 1, "Client Side Objective" column,
+plus the coreset outer loop that in practice runs per client).
+
+Per communication round the client:
+
+  1. receives the global model z and copies it into ``self.z``;
+  2. repeats, for ``coreset_outer_steps`` iterations (Sec. 4.3 alternation):
+       a. ClientUpdate: ``local_rounds`` passes of reparameterised SGD that
+          jointly update
+             - q_w  via Eq. 9  (weighted NLL + zeta/Nb * KL(q_w || z)),
+             - q    via Eq. 1  (NLL          + zeta/Nb * KL(q   || z)),
+             - z    via Eq. 2  (zeta/Nb * KL( stop-grad(q_or_qw) || z));
+       b. rebuild coreset weights w_i with A-IHT on the potentials of q
+          (skipped for the baselines);
+       c. record KL(q_w || q) and stop early once it plateaus;
+  3. uploads the local z-track.
+
+Methods:
+  * ``coreset``      : full Algorithm 1 (q_w + A-IHT, z regularised to q_w)
+  * ``pfedbayes``    : w_i == 1, no A-IHT, single posterior, z regularised to q
+  * ``randomsubset`` : w_i = random n_k mask, no A-IHT, z regularised to q_w
+"""
+
 import copy
 
 import numpy as np
-from src.clientModels.clientBaseClass import Client
-from src.model import *
-from torch.autograd import Variable
+import torch
 
-torch.autograd.set_detect_anomaly(True)
+from src.bayesianCoresets.coreset import build_weights, random_subset_weights
+from src.model import gaussian_kl
 
 
-class ClientModelClass(Client):
-    def __init__(
-        self,
-        numeric_id,
-        train_data,
-        test_data,
-        model,
-        batch_size,
-        learning_rate,
-        beta,
-        lamda,
-        local_epochs,
-        optimizer,
-        personal_learning_rate,
-        device,
-        output_dim=10,
-    ):
-        super().__init__(
-            numeric_id,
-            train_data,
-            test_data,
-            model[0],
-            batch_size,
-            learning_rate,
-            beta,
-            lamda,
-            local_epochs,
-            device,
-            output_dim=output_dim,
-        )
+class ClientModelClass:
+    def __init__(self, base, template_model, cfg):
+        self.b = base
+        self.cfg = cfg
+        self.method = cfg["method"]
+        self.device = base.device
+        self.rng = np.random.default_rng(abs(hash(("client", base.id))) % (2**32))
 
-        self.output_dim = output_dim
-        self.batch_size = batch_size
-        self.N_Batch = len(train_data) // batch_size
-        self.personal_learning_rate = personal_learning_rate
-        self.optimizer1 = torch.optim.Adam(
-            self.personal_model.parameters(), lr=self.personal_learning_rate
-        )
-        self.optimizer11 = torch.optim.Adam(
-            self.personal_model.parameters(), lr=self.personal_learning_rate
-        )
-        self.optimizer2 = torch.optim.Adam(
-            self.model.parameters(), lr=self.learning_rate
-        )
-        self.optimizer3 = torch.optim.Adam(
-            self.model.parameters(), lr=self.learning_rate
-        )
-        self.coreset_optimizer = torch.optim.Adam(self.model.parameters(), lr=0.001)
+        self.z = copy.deepcopy(template_model).to(self.device)
+        self.q = copy.deepcopy(template_model).to(self.device)
+        self.q_w = copy.deepcopy(template_model).to(self.device)
+        self.opt_q = torch.optim.Adam(self.q.parameters(), lr=cfg["personal_lr"])
+        self.opt_qw = torch.optim.Adam(self.q_w.parameters(), lr=cfg["personal_lr"])
+        self.opt_z = torch.optim.Adam(self.z.parameters(), lr=cfg["lr"])
 
-    def set_grads(self, new_grads):
-        if isinstance(new_grads, nn.Parameter):
-            for model_grad, new_grad in zip(self.model.parameters(), new_grads):
-                model_grad.data = new_grad.data
-        elif isinstance(new_grads, list):
-            for idx, model_grad in enumerate(self.model.parameters()):
-                model_grad.data = new_grads[idx]
+        n = self.b.train_samples
+        self.n_k = int(round(cfg["coreset_frac"] * n))
+        self.w = np.ones(n, dtype=np.float64)
+        if self.method == "randomsubset":
+            self.w, _ = random_subset_weights(n, self.n_k, self.rng)
+        self.kl_hist = []
 
-    def train(self, epochs):
-        LOSS = 0
-        Round = 5
-        self.model.train()
-        self.personal_model.train()
+    # ------------------------------------------------------------ round hooks
+    def set_global(self, mus, rhos):
+        self.z.load_from(mus, rhos)
 
-        true_w = np.zeros([100, 1])
-        true_supp = np.random.permutation(100)[:50]
-        true_w[true_supp] = np.random.randn(50, 1)
-        true_w = torch.tensor(true_w, dtype=torch.float32, requires_grad=True)
+    def upload(self):
+        return self.z.detached_params()
 
-        for epoch_final in range(1, 100):
-            for epoch in range(1, self.local_epochs + 1):
-                X, Y = self.get_next_train_batch()
+    @property
+    def train_samples(self):
+        return self.b.train_samples
 
-                print(X.shape)
-
-                batch_X = Variable(X.view(self.batch_size, -1))
-                batch_X_coreset = true_w.T @ (batch_X)
-
-                batch_Y = Variable(Y.view(self.batch_size, -1))
-                label_one_hot = F.one_hot(batch_Y, num_classes=self.output_dim).squeeze(
-                    dim=1
+    # ------------------------------------------------------------ local train
+    def _local_rounds(self, use_qw):
+        cfg, nb = self.cfg, self.b.n_batches
+        for _ in range(cfg["local_rounds"]):
+            for Xb, Yb, idx in self.b.batches():
+                z_mus, z_rhos = self.z.detached_params()
+                wb = (
+                    torch.as_tensor(self.w[idx], dtype=torch.float32, device=self.device)
+                    if use_qw
+                    else None
                 )
 
-                for r in range(1, Round + 1):
-                    epsilons = self.personal_model.sample_epsilons(
-                        self.model.layer_param_shapes
-                    )
-                    layer_params1 = self.personal_model.transform_gaussian_samples(
-                        self.personal_model.mus, self.personal_model.rhos, epsilons
-                    )
+                # (1) q on full data -- Eq. 1
+                self.opt_q.zero_grad()
+                self.q.elbo(Xb, Yb, z_mus, z_rhos, nb, None, cfg["mc"]).backward()
+                self.opt_q.step()
 
-                    personal_output = self.personal_model.net(batch_X, layer_params1)
+                # (2) q_w on coreset-weighted data -- Eq. 9
+                if use_qw:
+                    self.opt_qw.zero_grad()
+                    self.q_w.elbo(Xb, Yb, z_mus, z_rhos, nb, wb, cfg["mc"]).backward()
+                    self.opt_qw.step()
 
-                    personal_loss = self.personal_model.combined_loss_personal(
-                        personal_output,
-                        label_one_hot,
-                        layer_params1,
-                        self.personal_model.mus,
-                        self.personal_model.sigmas,
-                        copy.deepcopy(self.model.mus),
-                        [t.clone().detach() for t in self.model.sigmas],
-                        self.local_epochs,
-                    )
+                # (3) local z-track -- Eq. 2 : zeta/Nb * KL( stop-grad(src) || z )
+                src = self.q_w if use_qw else self.q
+                s_mus, s_rhos = src.detached_params()
+                self.opt_z.zero_grad()
+                loss_z = self.z.zeta / nb * gaussian_kl(
+                    s_mus, s_rhos, self.z.mus, self.z.rhos
+                )
+                loss_z.backward()
+                self.opt_z.step()
 
-                    epsilons_coreset = self.personal_model.sample_epsilons(
-                        self.model.layer_param_shapes
-                    )
-                    layer_params1_coreset = (
-                        self.personal_model.transform_gaussian_samples_coreset(
-                            self.personal_model.coreset_mus,
-                            self.personal_model.coreset_rhos,
-                            epsilons_coreset,
-                        )
-                    )
+    def local_train(self):
+        use_qw = self.method in ("coreset", "randomsubset")
+        outer = self.cfg["coreset_outer_steps"] if self.method == "coreset" else 1
 
-                    personal_output_coreset = self.personal_model.net(
-                        batch_X_coreset, layer_params1_coreset
-                    )
+        for _ in range(outer):
+            self._local_rounds(use_qw)
 
-                    personal_loss_coreset = (
-                        self.personal_model.combined_loss_personal_coreset(
-                            personal_output_coreset,
-                            label_one_hot,
-                            layer_params1_coreset,
-                            self.personal_model.coreset_mus,
-                            self.personal_model.coreset_sigmas,
-                            copy.deepcopy(self.model.mus),
-                            [t.clone().detach() for t in self.model.sigmas],
-                            self.local_epochs,
-                        )
-                    )
-
-                    self.optimizer1.zero_grad()
-                    personal_loss.backward(retain_graph=True)
-                    self.optimizer1.step()
-
-                    self.optimizer11.zero_grad()
-                    personal_loss_coreset.backward(retain_graph=True)
-
-                    self.optimizer11.step()
-
-                # local model
-                epsilons = self.model.sample_epsilons(self.model.layer_param_shapes)
-                layer_params2 = self.model.transform_gaussian_samples(
-                    self.model.mus, self.model.rhos, epsilons
+            if self.method == "coreset" and self.n_k < self.b.train_samples:
+                self.w, _ = build_weights(
+                    self.q, self.b.X, self.b.Y_onehot, self.n_k,
+                    n_proj=self.cfg["coreset_S"], max_iter=self.cfg["coreset_iters"],
                 )
 
-                layer_params2_coreset = self.model.transform_gaussian_samples(
-                    self.model.coreset_mus, self.model.coreset_rhos, epsilons
-                )
+            if use_qw:
+                with torch.no_grad():
+                    qw_m, qw_r = self.q_w.detached_params()
+                    q_m, q_r = self.q.detached_params()
+                    self.kl_hist.append(float(gaussian_kl(qw_m, qw_r, q_m, q_r)))
+                if len(self.kl_hist) >= 2 and abs(
+                    self.kl_hist[-1] - self.kl_hist[-2]
+                ) < self.cfg["coreset_tol"] * max(1.0, abs(self.kl_hist[-2])):
+                    break
 
-                self.model.net(batch_X, layer_params2)
-
-                self.model.net(batch_X_coreset, layer_params2_coreset)
-
-                model_loss = self.model.combined_loss_local(
-                    [t.clone().detach() for t in layer_params1],
-                    copy.deepcopy(self.personal_model.mus),
-                    [t.clone().detach() for t in self.personal_model.sigmas],
-                    self.model.mus,
-                    self.model.sigmas,
-                    self.local_epochs,
-                )
-
-                model_loss_coreset = self.model.combined_loss_local_coreset(
-                    [t.clone().detach() for t in layer_params1_coreset],
-                    copy.deepcopy(self.personal_model.coreset_mus),
-                    [t.clone().detach() for t in self.personal_model.coreset_sigmas],
-                    self.model.mus,
-                    self.model.sigmas,
-                    self.local_epochs,
-                )
-
-                self.optimizer2.zero_grad()
-                model_loss.backward(retain_graph=True)
-
-                self.optimizer3.zero_grad()
-
-                model_loss_coreset.backward(retain_graph=True)
-                self.optimizer2.step()
-
-                self.optimizer3.step()
-            K_L_q_q_w = sum(
-                [
-                    torch.sum(
-                        kl_divergence(
-                            Normal(
-                                self.personal_model.mus[i].clone(),
-                                self.personal_model.sigmas[i].clone(),
-                            ),
-                            Normal(
-                                self.personal_model.coreset_mus[i].clone(),
-                                self.personal_model.coreset_sigmas[i].clone(),
-                            ),
-                        )
-                    )
-                    for i in range(len(copy.deepcopy(self.personal_model.mus)))
-                ]
-            )
-
-            self.coreset_optimizer.zero_grad()
-            K_L_q_q_w.backward(retain_graph=True)
-
-            self.coreset_optimizer.step()
-
-        return LOSS
+    # ------------------------------------------------------------ evaluation
+    def evaluate(self):
+        personal = self.q_w if self.method in ("coreset", "randomsubset") else self.q
+        pc, pn = self.b._accuracy(personal, self.b.Xte, self.b.Yte)
+        gc, gn = self.b._accuracy(self.z, self.b.Xte, self.b.Yte)
+        tr_c, tr_n = self.b._accuracy(personal, self.b.X, self.b.Y)
+        return {
+            "per_correct": pc, "per_n": pn,
+            "glob_correct": gc, "glob_n": gn,
+            "train_correct": tr_c, "train_n": tr_n,
+            "train_nll": self.b._nll_sum(personal, self.b.X, self.b.Y_onehot),
+            "kl_qw_q": self.kl_hist[-1] if self.kl_hist else float("nan"),
+        }

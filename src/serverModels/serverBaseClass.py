@@ -1,452 +1,92 @@
-import copy
+"""Slim FL server base: client registry, beta-mixed aggregation, result I/O."""
+
 import os
 
 import h5py
 import numpy as np
 import torch
-from torch.nn import Module
 
 
 class Server:
-    def __init__(
-        self,
-        dataset,
-        algorithm,
-        model,
-        batch_size,
-        learning_rate,
-        beta,
-        lamda,
-        num_glob_iters,
-        local_epochs,
-        optimizer,
-        num_users,
-        times,
-        device,
-    ):
-        # Set up the main attributes
-        self.dataset = dataset
-        self.num_glob_iters = num_glob_iters
-        self.local_epochs = local_epochs
-        self.batch_size = batch_size
-        self.learning_rate = learning_rate
-        self.total_train_samples = 0
-        # global model.
-        self.model = (
-            copy.deepcopy(model) if isinstance(model, Module) else model().to(device)
-        )
+    def __init__(self, global_model, cfg):
+        self.model = global_model
+        self.cfg = cfg
+        self.beta = cfg["beta"]
         self.users = []
-        self.selected_users = []
-        self.num_users = num_users
-        self.beta = beta
-        self.lamda = lamda
-        self.algorithm = algorithm
-        (
-            self.rs_train_acc,
-            self.rs_train_loss,
-            self.rs_glob_acc,
-            self.rs_per_acc,
-            self.rs_train_acc_per,
-            self.rs_train_loss_per,
-            self.rs_glob_acc_per,
-        ) = [], [], [], [], [], [], []
-        self.times = times
+        self.history = {"per_acc": [], "glob_acc": [], "train_acc": [], "train_loss": [],
+                        "kl_qw_q": [], "round": []}
 
-    def aggregate_grads(self):
-        assert self.users is not None and len(self.users) > 0
-        for param in self.model.parameters():
-            param.grad = torch.zeros_like(param.data)
-        for user in self.users:
-            self.add_grad(user, user.train_samples / self.total_train_samples)
+    # ----------------------------------------------------------- aggregation
+    def broadcast(self):
+        mus, rhos = self.model.detached_params()
+        for u in self.users:
+            u.set_global(mus, rhos)
 
-    def add_grad(self, user, ratio):
-        user_grad = user.get_grads()
-        for idx, param in enumerate(self.model.parameters()):
-            param.grad = param.grad + user_grad[idx].clone() * ratio
+    def aggregate(self, selected):
+        """v^{t+1} = (1-beta) v^t + beta * sum_i (n_i / sum n) v^{t+1}_i   (Alg. 1)."""
+        total = sum(u.train_samples for u in selected)
+        prev_mus, prev_rhos = self.model.detached_params()
+        agg_mus = [np.zeros_like(m.detach().cpu().numpy()) for m in self.model.mus]
+        agg_rhos = [np.zeros_like(r.detach().cpu().numpy()) for r in self.model.rhos]
+        for u in selected:
+            mus, rhos = u.upload()
+            ratio = u.train_samples / total
+            for k in range(len(agg_mus)):
+                agg_mus[k] += ratio * mus[k].cpu().numpy()
+                agg_rhos[k] += ratio * rhos[k].cpu().numpy()
+        new_mus = [
+            (1 - self.beta) * pm + self.beta * torch.as_tensor(am, device=pm.device, dtype=pm.dtype)
+            for pm, am in zip(prev_mus, agg_mus)
+        ]
+        new_rhos = [
+            (1 - self.beta) * pr + self.beta * torch.as_tensor(ar, device=pr.device, dtype=pr.dtype)
+            for pr, ar in zip(prev_rhos, agg_rhos)
+        ]
+        self.model.load_from(new_mus, new_rhos)
 
-    def send_parameters(self):
-        assert self.users is not None and len(self.users) > 0
-        for user in self.users:
-            user.set_parameters(self.model)
+    def select(self, rng):
+        s = self.cfg["clients_per_round"]
+        if s >= len(self.users):
+            return list(self.users)
+        idx = rng.choice(len(self.users), size=s, replace=False)
+        return [self.users[i] for i in idx]
 
-    def add_parameters(self, user, ratio):
-        self.model.parameters()
-        for server_param, user_param in zip(
-            self.model.parameters(), user.get_parameters()
-        ):
-            server_param.data = server_param.data + user_param.data.clone() * ratio
-
-    def aggregate_parameters(self):
-        assert self.users is not None and len(self.users) > 0
-        for param in self.model.parameters():
-            param.data = torch.zeros_like(param.data)
-        total_train = 0
-        # if(self.num_users = self.to)
-        for user in self.selected_users:
-            total_train += user.train_samples
-        for user in self.selected_users:
-            self.add_parameters(user, user.train_samples / total_train)
-
-    def save_model(self, post_fix_str):
-        model_path = os.path.join("models", self.dataset)
-        if not os.path.exists(model_path):
-            os.makedirs(model_path)
-        file_name = os.path.join(model_path, "server_" + post_fix_str + ".pt")
-        torch.save(self.model, file_name)
-        return file_name
-
-    def load_model(self):
-        model_path = os.path.join("models", self.dataset, "server" + ".pt")
-        assert os.path.exists(model_path)
-        self.model = torch.load(model_path)
-
-    def model_exists(self):
-        return os.path.exists(os.path.join("models", self.dataset, "server" + ".pt"))
-
-    def select_users(self, round, num_users):
-        """selects num_clients clients weighted by number of samples from possible_clients
-        Args:
-            num_clients: number of clients to select; default 20
-                note that within function, num_clients is set to
-                min(num_clients, len(possible_clients))
-
-        Return:
-            list of selected clients objects
-        """
-        if num_users == len(self.users):
-            print("All users are selected")
-            return self.users
-
-        num_users = min(num_users, len(self.users))
-        # np.random.seed(round)
-        # , p=pk)
-        return np.random.choice(self.users, num_users, replace=False)
-
-    # define function for persionalized agegatation.
-    def persionalized_update_parameters(self, user, ratio):
-        # only argegate the local_weight_update
-        for server_param, user_param in zip(
-            self.model.parameters(), user.local_weight_updated
-        ):
-            server_param.data = server_param.data + user_param.data.clone() * ratio
-
-    def persionalized_aggregate_parameters(self):
-        assert self.users is not None and len(self.users) > 0
-
-        # store previous parameters
-        previous_param = copy.deepcopy(list(self.model.parameters()))
-        for param in self.model.parameters():
-            param.data = torch.zeros_like(param.data)
-        total_train = 0
-        # if(self.num_users = self.to)
-        for user in self.selected_users:
-            total_train += user.train_samples
-
-        for user in self.selected_users:
-            self.add_parameters(user, user.train_samples / total_train)
-            # self.add_parameters(user, 1 / len(self.selected_users))
-
-        # aaggregate avergage model with previous model using parameter beta
-        for pre_param, param in zip(previous_param, self.model.parameters()):
-            param.data = (1 - self.beta) * pre_param.data + self.beta * param.data
-
-    # Save loss, accurancy to h5 fiel
-    def save_results(self, post_fix_str):
-        alg = self.dataset + "_" + self.algorithm
-        alg = (
-            alg
-            + "_"
-            + str(self.learning_rate)
-            + "_"
-            + str(self.beta)
-            + "_"
-            + str(self.lamda)
-            + "_"
-            + str(self.num_users)
-            + "u"
-            + "_"
-            + str(self.batch_size)
-            + "b"
-            + "_"
-            + str(self.local_epochs)
+    # ----------------------------------------------------------- evaluation
+    def evaluate(self, round_idx):
+        agg = {k: 0 for k in ("pc", "pn", "gc", "gn", "tc", "tn")}
+        tot_nll = 0.0
+        kls = []
+        for u in self.users:
+            r = u.evaluate()
+            agg["pc"] += r["per_correct"]; agg["pn"] += r["per_n"]
+            agg["gc"] += r["glob_correct"]; agg["gn"] += r["glob_n"]
+            agg["tc"] += r["train_correct"]; agg["tn"] += r["train_n"]
+            tot_nll += r["train_nll"]
+            if not np.isnan(r["kl_qw_q"]):
+                kls.append(r["kl_qw_q"])
+        per = agg["pc"] / max(1, agg["pn"])
+        glob = agg["gc"] / max(1, agg["gn"])
+        tra = agg["tc"] / max(1, agg["tn"])
+        loss = tot_nll / max(1, agg["tn"])
+        kl = float(np.mean(kls)) if kls else float("nan")
+        self.history["round"].append(round_idx)
+        self.history["per_acc"].append(per)
+        self.history["glob_acc"].append(glob)
+        self.history["train_acc"].append(tra)
+        self.history["train_loss"].append(loss)
+        self.history["kl_qw_q"].append(kl)
+        print(
+            f"[round {round_idx:3d}] per_acc={per:.4f} glob_acc={glob:.4f} "
+            f"train_acc={tra:.4f} train_loss={loss:.3f} kl(q_w||q)={kl:.3f}"
         )
-        if self.algorithm == "pFedMe" or self.algorithm == "pFedMe_p":
-            alg = alg + "_" + str(self.K) + "_" + str(self.personal_learning_rate)
-        alg = alg + "_" + str(self.times)
+        return per, glob
 
-        if len(self.rs_glob_acc) != 0 & len(self.rs_train_acc) & len(
-            self.rs_train_loss
-        ):
-            with h5py.File(
-                "./results/"
-                + "{}.h5".format(
-                    alg + "_" + post_fix_str,
-                ),
-                "w",
-            ) as hf:
-                hf.create_dataset("rs_per_acc", data=self.rs_per_acc)
-                hf.create_dataset("rs_glob_acc", data=self.rs_glob_acc)
-                hf.create_dataset("rs_train_acc", data=self.rs_train_acc)
-                hf.create_dataset("rs_train_loss", data=self.rs_train_loss)
-                hf.close()
-
-        # store persionalized value
-        alg = self.dataset + "_" + self.algorithm + "_p"
-        alg = (
-            alg
-            + "_"
-            + str(self.learning_rate)
-            + "_"
-            + str(self.beta)
-            + "_"
-            + str(self.lamda)
-            + "_"
-            + str(self.num_users)
-            + "u"
-            + "_"
-            + str(self.batch_size)
-            + "b"
-            + "_"
-            + str(self.local_epochs)
-        )
-        if self.algorithm == "pFedMe" or self.algorithm == "pFedMe_p":
-            alg = alg + "_" + str(self.K) + "_" + str(self.personal_learning_rate)
-        alg = alg + "_" + str(self.times)
-        if len(self.rs_glob_acc_per) != 0 & len(self.rs_train_acc_per) & len(
-            self.rs_train_loss_per
-        ):
-            with h5py.File(
-                "./results/"
-                + "{}.h5".format(
-                    alg + "_" + post_fix_str,
-                ),
-                "w",
-            ) as hf:
-                hf.create_dataset("rs_per_acc", data=self.rs_per_acc)
-                hf.create_dataset("rs_glob_acc", data=self.rs_glob_acc_per)
-                hf.create_dataset("rs_train_acc", data=self.rs_train_acc_per)
-                hf.create_dataset("rs_train_loss", data=self.rs_train_loss_per)
-                hf.close()
-
-    def test(self):
-        """tests self.latest_model on given clients"""
-        num_samples = []
-        tot_correct = []
-        for c in self.users:
-            ct, ns = c.test()
-            tot_correct.append(ct * 1.0)
-            num_samples.append(ns)
-        ids = [c.id for c in self.users]
-
-        return ids, num_samples, tot_correct
-
-    def testBayes(self):
-        """tests self.latest_model on given clients"""
-        num_samples = []
-        tot_correct = []
-        for c in self.users:
-            ct, ns = c.testBayes()
-            tot_correct.append(ct * 1.0)
-            num_samples.append(ns)
-        ids = [c.id for c in self.users]
-
-        return ids, num_samples, tot_correct
-
-    def testpFedbayes(self):
-        """tests self.latest_model on given clients"""
-        num_samples = []
-        tot_correct_p = []
-        tot_correct_g = []
-        for c in self.users:
-            ct_p, ct_g, ns = c.testpFedbayes()
-            tot_correct_p.append(ct_p * 1.0)
-            tot_correct_g.append(ct_g * 1.0)
-            num_samples.append(ns)
-        ids = [c.id for c in self.users]
-
-        return ids, num_samples, tot_correct_p, tot_correct_g
-
-    def testSparseBayes(self):
-        """tests self.latest_model on given clients"""
-        num_samples = []
-        tot_correct = []
-        for c in self.users:
-            ct, ns = c.testSparseBayes()
-            tot_correct.append(ct * 1.0)
-            num_samples.append(ns)
-        ids = [c.id for c in self.users]
-
-        return ids, num_samples, tot_correct
-
-    def testpFedSbayes(self):
-        """tests self.latest_model on given clients"""
-        num_samples = []
-        tot_correct = []
-        for c in self.users:
-            ct, ns = c.testSparseBayes()
-            tot_correct.append(ct * 1.0)
-            num_samples.append(ns)
-        ids = [c.id for c in self.users]
-
-        return ids, num_samples, tot_correct
-
-    def train_error_and_loss(self):
-        num_samples = []
-        tot_correct = []
-        losses = []
-        for c in self.users:
-            ct, cl, ns = c.train_error_and_loss()
-            tot_correct.append(ct * 1.0)
-            num_samples.append(ns)
-            losses.append(cl * 1.0)
-
-        ids = [c.id for c in self.users]
-        # groups = [c.group for c in self.clients]
-
-        return ids, num_samples, tot_correct, losses
-
-    def train_error_and_loss_bayes(self):
-        num_samples = []
-        tot_correct = []
-        losses = []
-        for c in self.users:
-            ct, cl, ns = c.train_error_and_loss_bayes()
-            tot_correct.append(ct * 1.0)
-            num_samples.append(ns)
-            losses.append(cl * 1.0)
-
-        ids = [c.id for c in self.users]
-        # groups = [c.group for c in self.clients]
-
-        return ids, num_samples, tot_correct, losses
-
-    def train_error_and_loss_pFedbayes(self):
-        num_samples = []
-        tot_correct = []
-        losses = []
-        for c in self.users:
-            ct, cl, ns = c.train_error_and_loss_pFedbayes()
-            tot_correct.append(ct)
-            num_samples.append(ns)
-            losses.append(cl)
-
-        ids = [c.id for c in self.users]
-        # groups = [c.group for c in self.clients]
-
-        return ids, num_samples, tot_correct, losses
-
-    def train_error_and_loss_sparsebayes(self):
-        num_samples = []
-        tot_correct = []
-        losses = []
-        for c in self.users:
-            ct, cl, ns = c.train_error_and_loss_sparsebayes()
-            tot_correct.append(ct * 1.0)
-            num_samples.append(ns)
-            losses.append(cl * 1.0)
-
-        ids = [c.id for c in self.users]
-        # groups = [c.group for c in self.clients]
-
-        return ids, num_samples, tot_correct, losses
-
-    def train_error_and_loss_pFedSbayes(self):
-        num_samples = []
-        tot_correct = []
-        losses = []
-        for c in self.users:
-            ct, cl, ns = c.train_error_and_loss_sparsebayes()
-            tot_correct.append(ct * 1.0)
-            num_samples.append(ns)
-            losses.append(cl * 1.0)
-
-        ids = [c.id for c in self.users]
-        # groups = [c.group for c in self.clients]
-
-        return ids, num_samples, tot_correct, losses
-
-    def test_persionalized_model(self):
-        """tests self.latest_model on given clients"""
-        num_samples = []
-        tot_correct = []
-        for c in self.users:
-            ct, ns = c.test_persionalized_model()
-            tot_correct.append(ct * 1.0)
-            num_samples.append(ns)
-        ids = [c.id for c in self.users]
-
-        return ids, num_samples, tot_correct
-
-    def train_error_and_loss_persionalized_model(self):
-        num_samples = []
-        tot_correct = []
-        losses = []
-        for c in self.users:
-            ct, cl, ns = c.train_error_and_loss_persionalized_model()
-            tot_correct.append(ct * 1.0)
-            num_samples.append(ns)
-            losses.append(cl * 1.0)
-
-        ids = [c.id for c in self.users]
-        # groups = [c.group for c in self.clients]
-
-        return ids, num_samples, tot_correct, losses
-
-    def evaluate(self):
-        stats = self.test()
-        stats_train = self.train_error_and_loss()
-        glob_acc = np.sum(stats[2]) * 1.0 / np.sum(stats[1])
-        train_acc = np.sum(stats_train[2]) * 1.0 / np.sum(stats_train[1])
-        # train_loss = np.dot(stats_train[3], stats_train[1])*1.0/np.sum(stats_train[1])
-        train_loss = sum(
-            [x * y for (x, y) in zip(stats_train[1], stats_train[3])]
-        ) / np.sum(stats_train[1])
-        self.rs_glob_acc.append(glob_acc)
-        self.rs_train_acc.append(train_acc)
-        self.rs_train_loss.append(train_loss)
-        # print("stats_train[1]",stats_train[3][0])
-        print("Average Global Accurancy: ", glob_acc)
-        print("Average Global Trainning Accurancy: ", train_acc)
-        print("Average Global Trainning Loss: ", train_loss)
-
-    def evaluate_personalized_model(self):
-        stats = self.test_persionalized_model()
-        stats_train = self.train_error_and_loss_persionalized_model()
-        glob_acc = np.sum(stats[2]) * 1.0 / np.sum(stats[1])
-        train_acc = np.sum(stats_train[2]) * 1.0 / np.sum(stats_train[1])
-        # train_loss = np.dot(stats_train[3], stats_train[1])*1.0/np.sum(stats_train[1])
-        train_loss = sum(
-            [x * y for (x, y) in zip(stats_train[1], stats_train[3])]
-        ) / np.sum(stats_train[1])
-        self.rs_glob_acc_per.append(glob_acc)
-        self.rs_train_acc_per.append(train_acc)
-        self.rs_train_loss_per.append(train_loss)
-        # print("stats_train[1]",stats_train[3][0])
-        print("Average Personal Accurancy: ", glob_acc)
-        print("Average Personal Trainning Accurancy: ", train_acc)
-        print("Average Personal Trainning Loss: ", train_loss)
-
-    def evaluate_one_step(self):
-        for c in self.users:
-            c.train_one_step()
-
-        stats = self.test()
-        stats_train = self.train_error_and_loss()
-
-        # set local model back to client for training process.
-        for c in self.users:
-            c.update_parameters(c.local_model)
-
-        glob_acc = np.sum(stats[2]) * 1.0 / np.sum(stats[1])
-        train_acc = np.sum(stats_train[2]) * 1.0 / np.sum(stats_train[1])
-
-        train_loss = sum(
-            [x * y for (x, y) in zip(stats_train[1], stats_train[3])]
-        ).item() / np.sum(stats_train[1])
-        self.rs_glob_acc_per.append(glob_acc)
-        self.rs_train_acc_per.append(train_acc)
-        self.rs_train_loss_per.append(train_loss)
-
-        print("Average Personal Accurancy: ", glob_acc)
-        print("Average Personal Trainning Accurancy: ", train_acc)
-        print("Average Personal Trainning Loss: ", train_loss)
+    # ----------------------------------------------------------- persistence
+    def save_results(self, tag, out_dir="results"):
+        os.makedirs(out_dir, exist_ok=True)
+        path = os.path.join(out_dir, f"{tag}.h5")
+        with h5py.File(path, "w") as hf:
+            for k, v in self.history.items():
+                hf.create_dataset(k, data=np.asarray(v, dtype=np.float64))
+        print(f"[server] results -> {path}")
+        return path

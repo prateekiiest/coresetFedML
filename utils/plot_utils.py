@@ -1,325 +1,102 @@
-import matplotlib.pyplot as plt
+"""
+Plotting / tabulation for the benchmark experiments.  Reads the per-run HDF5
+files written by ``serverBaseClass.save_results`` (keys: round, per_acc,
+glob_acc, train_acc, train_loss, kl_qw_q).
+
+Figures produced (matplotlib, PNG):
+  * accuracy vs communication round          -> results/fig_accuracy_<dataset>.png
+  * KL(q_w || q) vs round  (Fig. 3a / 4)     -> results/fig_kl_<dataset>.png
+  * test acc vs round for several n_k        -> results/fig_comm_rounds_<dataset>.png
+And a text table (Table 3 style) to stdout / results/summary_<dataset>.txt
+"""
+
+import os
+
 import h5py
+import matplotlib
 import numpy as np
 
-plt.rcParams.update({"font.size": 14})
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt  # noqa: E402
+
+RESULTS = "results"
 
 
-def simple_read_data(alg, parent_path="./results"):
-    """
-    h5 file read.
-    @param parent_path:
-    @param alg:
-    @return:
-    """
-    print(alg)
-    hf = h5py.File(
-        "{}/".format(parent_path)
-        + "Mnist_pFedBayes_0.001_1.0_15_10u_100b_20_plr_0.001_lr_0.001_avg.h5",
-        "r",
-    )
-    rs_glob_acc = np.array(hf.get("rs_glob_acc")[:])
-    rs_per_acc = (
-        np.array(hf.get("rs_per_acc")[:])
-        if hf.get("rs_per_acc") is not None
-        else np.zeros(shape=rs_glob_acc.shape)
-    )
-    rs_train_acc = np.array(hf.get("rs_train_acc")[:])
-    rs_train_loss = np.array(hf.get("rs_train_loss")[:])
-    if len(rs_per_acc) == 0:
-        rs_per_acc = [np.nan] * len(rs_glob_acc)
-    return rs_train_acc, rs_train_loss, rs_glob_acc, rs_per_acc
+def load(tag, results=RESULTS):
+    with h5py.File(os.path.join(results, f"{tag}.h5"), "r") as hf:
+        return {k: np.asarray(hf[k]) for k in hf.keys()}
 
 
-def get_training_data_value(
-    num_users=100,
-    loc_ep1=5,
-    Numb_Glob_Iters=10,
-    lamb=[],
-    learning_rate=[],
-    beta=[],
-    algorithms_list=[],
-    batch_size=[],
-    dataset="",
-    k=[],
-    personal_learning_rate=[],
-):
-    Numb_Algs = len(algorithms_list)
-    train_acc = np.zeros((Numb_Algs, Numb_Glob_Iters))
-    train_loss = np.zeros((Numb_Algs, Numb_Glob_Iters))
-    glob_acc = np.zeros((Numb_Algs, Numb_Glob_Iters))
-    per_acc = np.zeros((Numb_Algs, Numb_Glob_Iters))
-    algs_lbl = algorithms_list.copy()
-    for i in range(Numb_Algs):
-        string_learning_rate = str(learning_rate[i])
-        string_learning_rate = (
-            string_learning_rate + "_" + str(beta[i]) + "_" + str(lamb[i])
+def _rounds_to_target(d, target):
+    """First round index whose glob/per acc reaches ``target`` (else last)."""
+    acc = np.maximum(d["per_acc"], d["glob_acc"])
+    hit = np.where(acc >= target)[0]
+    return int(d["round"][hit[0]]) if len(hit) else int(d["round"][-1])
+
+
+def plot_accuracy(tags, labels, dataset, results=RESULTS):
+    fig, ax = plt.subplots(1, 2, figsize=(11, 4))
+    for tag, lab in zip(tags, labels):
+        d = load(tag, results)
+        ax[0].plot(d["round"], d["per_acc"], marker="o", ms=3, label=lab)
+        ax[1].plot(d["round"], d["glob_acc"], marker="o", ms=3, label=lab)
+    for a, t in zip(ax, ("Personal model", "Global model")):
+        a.set_title(t); a.set_xlabel("communication round"); a.set_ylabel("test accuracy")
+        a.grid(alpha=0.3); a.legend()
+    fig.tight_layout()
+    out = os.path.join(results, f"fig_accuracy_{dataset}.png")
+    fig.savefig(out, dpi=130); plt.close(fig)
+    print(f"[plot] {out}")
+
+
+def plot_kl(tags, labels, dataset, results=RESULTS):
+    fig, ax = plt.subplots(figsize=(6, 4))
+    any_kl = False
+    for tag, lab in zip(tags, labels):
+        d = load(tag, results)
+        kl = d["kl_qw_q"]
+        m = ~np.isnan(kl)
+        if m.any():
+            any_kl = True
+            ax.plot(d["round"][m], kl[m], marker="o", ms=3, label=lab)
+    ax.set_xlabel("communication round")
+    ax.set_ylabel(r"$D_{KL}(\hat q^i(\theta;w)\,\|\,\hat q^i(\theta))$")
+    ax.set_title(f"Coreset / full posterior divergence ({dataset})")
+    ax.grid(alpha=0.3)
+    if any_kl:
+        ax.legend()
+    fig.tight_layout()
+    out = os.path.join(results, f"fig_kl_{dataset}.png")
+    fig.savefig(out, dpi=130); plt.close(fig)
+    print(f"[plot] {out}")
+
+
+def plot_comm_rounds(tag_by_frac, dataset, results=RESULTS):
+    fig, ax = plt.subplots(figsize=(6, 4))
+    for frac, tag in sorted(tag_by_frac.items()):
+        d = load(tag, results)
+        ax.plot(d["round"], d["per_acc"], marker="o", ms=3, label=f"k = {int(frac*100)}%")
+    ax.set_xlabel("communication round"); ax.set_ylabel("personal test accuracy")
+    ax.set_title(f"Convergence vs coreset size ({dataset})")
+    ax.grid(alpha=0.3); ax.legend()
+    fig.tight_layout()
+    out = os.path.join(results, f"fig_comm_rounds_{dataset}.png")
+    fig.savefig(out, dpi=130); plt.close(fig)
+    print(f"[plot] {out}")
+
+
+def summarize(tags, labels, dataset, target=0.8, results=RESULTS):
+    lines = [f"{'method':<28}{'per_acc':>10}{'glob_acc':>10}{'rounds@%.2f' % target:>14}"]
+    lines.append("-" * len(lines[0]))
+    for tag, lab in zip(tags, labels):
+        d = load(tag, results)
+        lines.append(
+            f"{lab:<28}{d['per_acc'][-1]:>10.4f}{d['glob_acc'][-1]:>10.4f}"
+            f"{_rounds_to_target(d, target):>14d}"
         )
-        if algorithms_list[i] == "pFedMe" or algorithms_list[i] == "pFedMe_p":
-            algorithms_list[i] = (
-                algorithms_list[i]
-                + "_"
-                + string_learning_rate
-                + "_"
-                + str(num_users)
-                + "u"
-                + "_"
-                + str(batch_size[i])
-                + "b"
-                + "_"
-                + str(loc_ep1[i])
-                + "_"
-                + str(k[i])
-                + "_"
-                + str(personal_learning_rate[i])
-            )
-        else:
-            algorithms_list[i] = algorithms_list[
-                i
-            ] + "_" + string_learning_rate + "_" + str(num_users) + "u" + "_" + str(
-                batch_size[i]
-            ) + "b" "_" + str(loc_ep1[i]) + "_plr_" + str(
-                personal_learning_rate[i]
-            ) + "_lr_" + str(learning_rate[i])
-
-        train_acc[i, :], train_loss[i, :], glob_acc[i, :], per_acc[i, :] = np.array(
-            simple_read_data(dataset + "_" + algorithms_list[i] + "_avg")
-        )[:, :Numb_Glob_Iters]
-        algs_lbl[i] = algs_lbl[i]
-    return glob_acc, per_acc, train_acc, train_loss
-
-
-def get_all_training_data_value(
-    num_users=100,
-    loc_ep1=5,
-    Numb_Glob_Iters=10,
-    lamb=0,
-    learning_rate=0,
-    beta=0,
-    algorithms="",
-    batch_size=0,
-    dataset="",
-    k=0,
-    personal_learning_rate=0,
-    times=5,
-    post_fix_str="",
-):
-    train_acc = np.zeros((times, Numb_Glob_Iters))
-    train_loss = np.zeros((times, Numb_Glob_Iters))
-    glob_acc = np.zeros((times, Numb_Glob_Iters))
-    rs_per_acc = np.zeros((times, Numb_Glob_Iters))
-    algorithms_list = [algorithms] * times
-    for i in range(times):
-        string_learning_rate = str(learning_rate)
-        string_learning_rate = string_learning_rate + "_" + str(beta) + "_" + str(lamb)
-        algorithms_list[i] = (
-            algorithms_list[i]
-            + "_"
-            + string_learning_rate
-            + "_"
-            + str(num_users)
-            + "u"
-            + "_"
-            + str(batch_size)
-            + "b"
-            "_" + str(loc_ep1) + "_" + str(i) + "_" + post_fix_str
-        )
-
-        train_acc[i, :], train_loss[i, :], glob_acc[i, :], rs_per_acc[i, :] = np.array(
-            simple_read_data(dataset + "_" + algorithms_list[i])
-        )[:, :Numb_Glob_Iters]
-    return glob_acc, rs_per_acc, train_acc, train_loss
-
-
-def average_data(
-    num_users=100,
-    loc_ep1=5,
-    Numb_Glob_Iters=10,
-    lamb="",
-    learning_rate="",
-    beta="",
-    algorithms="",
-    batch_size=0,
-    dataset="",
-    k="",
-    personal_learning_rate="",
-    times=5,
-    post_fix_str="",
-):
-    glob_acc, rs_per_acc, train_acc, train_loss = get_all_training_data_value(
-        num_users,
-        loc_ep1,
-        Numb_Glob_Iters,
-        lamb,
-        learning_rate,
-        beta,
-        algorithms,
-        batch_size,
-        dataset,
-        k,
-        personal_learning_rate,
-        times,
-        post_fix_str,
-    )
-    glob_acc_data = np.average(glob_acc, axis=0)
-    rs_per_acc_data = np.average(rs_per_acc, axis=0)
-    train_acc_data = np.average(train_acc, axis=0)
-    train_loss_data = np.average(train_loss, axis=0)
-    # store average value to h5 file
-    max_accurancy = []
-    for i in range(times):
-        max_accurancy.append(glob_acc[i].max())
-
-    print("std:", np.std(max_accurancy))
-    print("Mean:", np.mean(max_accurancy))
-
-    alg = dataset + "_" + algorithms
-    alg = (
-        alg
-        + "_"
-        + str(learning_rate)
-        + "_"
-        + str(beta)
-        + "_"
-        + str(lamb)
-        + "_"
-        + str(num_users)
-        + "u"
-        + "_"
-        + str(batch_size)
-        + "b"
-        + "_"
-        + str(loc_ep1)
-    )
-    if algorithms == "pFedMe" or algorithms == "pFedMe_p":
-        alg = alg + "_" + str(k) + "_" + str(personal_learning_rate)
-    alg = alg + "_" + post_fix_str + "_" + "avg"
-    if len(glob_acc) != 0 & len(train_acc) & len(train_loss):
-        with h5py.File(
-            "./results/"
-            + "{}.h5".format(
-                alg,
-            ),
-            "w",
-        ) as hf:
-            hf.create_dataset("rs_glob_acc", data=glob_acc_data)
-            hf.create_dataset("rs_per_acc", data=rs_per_acc_data)
-            hf.create_dataset("rs_train_acc", data=train_acc_data)
-            hf.create_dataset("rs_train_loss", data=train_loss_data)
-            return hf.filename
-
-
-def get_label_name(name):
-    if name.startswith("pFedMe"):
-        if name.startswith("pFedMe_p"):
-            return "pFedMe" + " (PM)"
-        else:
-            return "pFedMe" + " (GM)"
-    if name.startswith("pFedbayes"):
-        return "pFedbayes"
-    if name.startswith("PerAvg"):
-        return "Per-FedAvg"
-    if name.startswith("FedAvg"):
-        return "FedAvg"
-    if name.startswith("APFL"):
-        return "APFL"
-
-
-def average_smooth(data, window_len=20, window="hanning"):
-    results = []
-    if window_len < 3:
-        return data
-    for i in range(len(data)):
-        x = data[i]
-        s = np.r_[x[window_len - 1 : 0 : -1], x, x[-2 : -window_len - 1 : -1]]
-        # print(len(s))
-        if window == "flat":  # moving average
-            w = np.ones(window_len, "d")
-        else:
-            w = eval("numpy." + window + "(window_len)")
-
-        y = np.convolve(w / w.sum(), s, mode="valid")
-        results.append(y[: window_len - 1])
-    return np.array(results)
-
-
-def plot_summary_one_figure_mnist_Compare(
-    num_users,
-    loc_ep1,
-    Numb_Glob_Iters,
-    lamb,
-    learning_rate,
-    beta,
-    algorithms_list,
-    batch_size,
-    dataset,
-    k,
-    personal_learning_rate,
-):
-    Numb_Algs = len(algorithms_list)
-    dataset = dataset
-
-    glob_acc_, per_acc_, train_acc, train_loss_ = get_training_data_value(
-        num_users,
-        loc_ep1,
-        Numb_Glob_Iters,
-        lamb,
-        learning_rate,
-        beta,
-        algorithms_list,
-        batch_size,
-        dataset,
-        k,
-        personal_learning_rate,
-    )
-
-    for i in range(Numb_Algs):
-        print("max accurancy:", glob_acc_[i].max())
-    glob_acc = average_smooth(glob_acc_, window="flat")
-    print("Averaged global acc", glob_acc)
-    average_smooth(train_loss_, window="flat")
-    per_acc = average_smooth(per_acc_, window="flat")
-
-    linestyles = ["-", "--", "-.", "-", "--", "-."]
-    linestyles = ["-", "-", "-", "-", "-", "-", "-"]
-    # linestyles = ['-','-','-','-','-','-','-']
-    markers = ["o", "v", "s", "*", "x", "P"]
-    print(lamb)
-    colors = ["tab:blue", "tab:green", "r", "darkorange", "tab:brown", "m"]
-    plt.figure(1, figsize=(5, 5))
-    plt.title("$\mu-$" + "strongly convex")
-    # plt.title("Nonconvex") # for non convex case
-    plt.grid(True)
-    # Global accurancy
-    for i in range(Numb_Algs):
-        label = get_label_name(algorithms_list[i])
-        print(glob_acc)
-        plt.plot(
-            glob_acc[i, 1:],
-            linestyle=linestyles[i],
-            label=label + "(GM)",
-            linewidth=1,
-            color=colors[i],
-            marker=markers[i],
-            markevery=0.2,
-            markersize=5,
-        )
-
-        plt.plot(
-            per_acc[i, 1:],
-            linestyle=linestyles[i + 2],
-            label=label + "(PM)",
-            linewidth=1,
-            color=colors[i + 2],
-            marker=markers[i + 2],
-            markevery=0.2,
-            markersize=5,
-        )
-    plt.legend(loc="lower right")
-    plt.ylabel("Test Accuracy")
-    plt.xlabel("Global rounds")
-    # plt.ylim([0.84,  0.98]) # non convex-case
-    plt.ylim([0.10, 0.95])  # Convex-case
-    plt.savefig(dataset.upper() + "Convex_Mnist_test_Com.pdf", bbox_inches="tight")
-    # plt.savefig(dataset.upper() + "Non_Convex_Mnist_test_Com.pdf", bbox_inches="tight")
-    plt.close()
+    txt = "\n".join(lines)
+    print(txt)
+    out = os.path.join(results, f"summary_{dataset}.txt")
+    with open(out, "w") as f:
+        f.write(txt + "\n")
+    print(f"[plot] {out}")
