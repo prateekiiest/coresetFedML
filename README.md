@@ -1,32 +1,48 @@
 # Bayesian Coreset Optimization for Personalized Federated Learning
-### _Prateek Chanda, Shrey Modi, Ganesh Ramakrishnan_
 
-### Accepted at International Conference on Learning Representations (ICLR) 2024
+[![OpenReview](https://img.shields.io/badge/OpenReview-ICLR%202024-8C1B13)](https://openreview.net/forum?id=uz7d2N2zul)
+[![Paper](https://img.shields.io/badge/Paper-PDF-B21A1B)](https://openreview.net/pdf?id=uz7d2N2zul)
+[![Project Page](https://img.shields.io/badge/Project-Page-1F6FEB)](https://coresetfederatedlearning.github.io/)
+[![Poster](https://img.shields.io/badge/ICLR%202024-Poster-4B4B77)](https://iclr.cc/media/PosterPDFs/ICLR%202024/17557.png?t=1713590458.7719705)
+[![Slides](https://img.shields.io/badge/ICLR%202024-Slides-4B4B77)](https://iclr.cc/media/iclr-2024/Slides/17557.pdf)
+[![License: MIT](https://img.shields.io/badge/License-MIT-3DA639)](./LICENSE)
 
-[Project Page](https://coresetfederatedlearning.github.io/) | [OpenReview](https://openreview.net/forum?id=uz7d2N2zul) | [Paper](https://openreview.net/pdf?id=uz7d2N2zul) | [Poster](https://iclr.cc/media/PosterPDFs/ICLR%202024/17557.png?t=1713590458.7719705) | [Slides](https://iclr.cc/media/iclr-2024/Slides/17557.pdf)
+**Authors**: **Prateek Chanda**$^{1}$ &nbsp; **Shrey Modi**$^{1}$ &nbsp; **Ganesh Ramakrishnan**$^{1}$
 
-------------------------------
+$^{1}$ Department of Computer Science, Indian Institute of Technology Bombay, India
 
-### Abstract
-In a distributed machine learning setting like Federated Learning where there are multiple clients involved which update their individual weights to a single central server, often training on the entire individual client's dataset for each client becomes cumbersome. To address this issue we propose CORESET-PFEDBAYES: a personalized coreset weighted federated learning setup where the training updates for each individual clients are forwarded to the central server based on only individual client coreset based representative data points instead of the entire client data. Through theoretical analysis we present how the average generalization error is minimax optimal up to logarithm bounds - upper bounded by $\mathcal{O}(n_k^{-\frac{2 \beta}{2 \beta+\boldsymbol{\Lambda}}} \log ^{2 \delta^{\prime}}(n_k))$ and lower bounds of $\mathcal{O}(n_k^{-\frac{2 \beta}{2 \beta+\boldsymbol{\Lambda}}})$, and how the overall generalization error on the data likelihood differs from a vanilla Federated Learning setup as a closed form function ${\boldsymbol{\Im}}(\boldsymbol{w}, n_k)$ of the coreset weights $\boldsymbol{w}$ and coreset sample size $n_k$.
+Published at **ICLR 2024** &nbsp;·&nbsp; [OpenReview](https://openreview.net/forum?id=uz7d2N2zul) &nbsp;·&nbsp; [Conference page](https://iclr.cc/virtual/2024/poster/17557) &nbsp;·&nbsp; [Project page](https://coresetfederatedlearning.github.io/)
+
+## Overview
+
+**TL;DR** — A personalized coreset-weighted federated learning setup where each
+client's training updates are computed from a small set of representative
+(coreset) data points instead of its entire dataset.
+
+We propose **CORESET-PFEDBAYES**: for each client `i` a weight vector `wᵢ`
+(`‖wᵢ‖₀ ≤ n_k`) is chosen so that the coreset-weighted posterior stays close to
+the full-data posterior while matching the coreset log-likelihood to the full
+log-likelihood. Through theoretical analysis we show the averaged generalization
+error is minimax optimal up to logarithmic terms — upper bounded by
+$\mathcal{O}(n_k^{-\frac{2 \beta}{2 \beta+\boldsymbol{\Lambda}}} \log ^{2 \delta^{\prime}}(n_k))$
+with a lower bound of
+$\mathcal{O}(n_k^{-\frac{2 \beta}{2 \beta+\boldsymbol{\Lambda}}})$ — and that the
+gap to a vanilla federated setup is a closed-form function
+${\boldsymbol{\Im}}(\boldsymbol{w}, n_k)$ of the coreset weights and coreset
+size.
 
 ------------------------------
 
 ## Repository contents
 
-This repository contains a runnable reconstruction of **Algorithm 1
-(CoreSet-PFedBayes)** together with drivers for the three experiment families
-in the paper:
+Implementation of **Algorithm 1 (CoreSet-PFedBayes)** with drivers for the three
+experiment families in the paper:
 
 | Paper | Driver | Output |
 |---|---|---|
 | Benchmark FL — Table 1 / 3, Fig. 3–5 (MNIST, FashionMNIST, CIFAR-10) | `scripts/run_benchmark.py`, `main.py` | accuracy / KL / comm-round figures, summary table |
 | Medical datasets — Table 2 (OCTMNIST; COVID-19 Radiography / APTOS 2019 via a folder path) | `src/experiments/medical/run_medical.py` | class-wise accuracy table |
 | Vanilla Bayesian coresets — Fig. 2, Fig. 3-left | `src/experiments/riemann_linear_regression/reproduce.py` | coreset-point + KL-vs-size figures |
-
-The precise reading of the ambiguous equations (`P_{θ,w}(D^i)`, the KL term in
-Eq. 7–8, the `ClientUpdate` cadence), the full equation → code map and the list
-of changes vs. the first commit are in **[`REPRODUCE.md`](REPRODUCE.md)**.
 
 ### Layout
 
@@ -35,7 +51,7 @@ main.py                                  # benchmark FL entry point (one method 
 scripts/run_benchmark.py                 # data-gen + 3 methods + figures + table
 scripts/run_paper_cpu.sh                 # 10-client, 40-round CPU config used for the paper-scale runs
 src/model.py                             # mean-field Gaussian BNN + weighted ELBO (Eq. 1 / 5 / 9)
-src/bayesianCoresets/accelerated_iht.py  # Accelerated-IHT II (Algorithm 2, unchanged)
+src/bayesianCoresets/accelerated_iht.py  # Accelerated-IHT II (Algorithm 2)
 src/bayesianCoresets/coreset.py          # log-likelihood potentials + A-IHT wrapper + random-subset baseline
 src/clientModels/clientModelClass.py     # Algorithm 1 client (q, q_w, z; A-IHT outer loop)
 src/serverModels/serverpFedbayes.py      # Algorithm 1 server loop (β-mixing, client subsampling)
@@ -112,10 +128,9 @@ python -m src.experiments.medical.run_medical --seeds 3
 `--methods full random logdet dispsum dispmin coreset` selects which rows to
 produce; output goes to `results/table2_octmnist.txt` (class-wise mean ± std).
 
-For **COVID-19 Radiography Database** / **APTOS 2019 Blindness Detection**
-(gated Kaggle downloads), arrange the images as an `ImageFolder`
-(`<root>/<class_name>/*.png`) and point the loader at it — the rest of the
-pipeline is unchanged:
+For **COVID-19 Radiography Database** / **APTOS 2019 Blindness Detection**,
+arrange the images as an `ImageFolder` (`<root>/<class_name>/*.png`) and point
+the loader at it — the rest of the pipeline is unchanged:
 
 ```bash
 python -m utils.medical_data --name covid --image_root /path/to/covid_imagefolder
@@ -142,11 +157,11 @@ array: `--prices2018 prices2018.npy`
 
 ------------------------------
 
-## Method ↔ paper (summary; full detail in `REPRODUCE.md`)
+## Method ↔ paper
 
 * `P_{θ,w}(Dⁱ)` is the Bayesian-coreset weighted likelihood
   `log P_{θ,w}(Dⁱ) = Σ_j w_j log p_θ(Dⁱ_j)`, `w ≥ 0`, `‖w‖₀ ≤ n_k`. Eq. 9 as
-  printed omits the `w_j` inside the sum (typo).
+  printed omits the `w_j` inside the sum.
 * The coreset weights are optimised by an **alternating** scheme (Algorithm 1):
   A-IHT II on the quadratic coreset-matching term, with the posteriors held
   fixed; `KL(q_w ‖ q)` is the diagnostic (Fig. 3a) and the outer stop criterion.
@@ -155,16 +170,27 @@ array: `--prices2018 prices2018.npy`
 * One `ClientUpdate` (R local reparam-SGD rounds) per A-IHT invocation; a few
   outer `(ClientUpdate → A-IHT)` steps per communication round.
 
+### Scope
+
+* `CoreSet-PFedBayes`, `PFedBayes` and `RandomSubset` are implemented; the other
+  Table 1 baselines (FedAvg, BNFed, pFedMe, perFedAvg) are out of scope here.
+* Medical experiments run on OCTMNIST out of the box; COVID-19 Radiography and
+  APTOS 2019 are supported via `--image_root`.
+* The Fig. 2 / 3 driver uses a synthetic 2-D spatial dataset by default, or the
+  UK house-price array via `--prices2018`.
+* Use the `paper` preset (not `smoke`) for accuracy numbers comparable to the
+  paper.
+
 ------------------------------
 
-### Citation
-```
-@inproceedings{
-      chanda2024bayesian,
-      title={Bayesian Coreset Optimization for Personalized Federated Learning},
-      author={Prateek Chanda and Shrey Modi and Ganesh Ramakrishnan},
-      booktitle={The Twelfth International Conference on Learning Representations},
-      year={2024},
-      url={https://openreview.net/forum?id=uz7d2N2zul}
-      }
+## Citation
+
+```bibtex
+@inproceedings{chanda2024bayesian,
+  title     = {Bayesian Coreset Optimization for Personalized Federated Learning},
+  author    = {Prateek Chanda and Shrey Modi and Ganesh Ramakrishnan},
+  booktitle = {The Twelfth International Conference on Learning Representations},
+  year      = {2024},
+  url       = {https://openreview.net/forum?id=uz7d2N2zul}
+}
 ```
