@@ -62,3 +62,12 @@ train data dist:
 rounds:  80%|████████  | 32/40 [10:40<02:45, 20.64s/it][round  32] per_acc=0.9444 glob_acc=0.7243 train_acc=0.9521 train_loss=0.165 kl(q_w||q)=nan
 rounds:  82%|████████▎ | 33/40 [11:03<02:27, 21.14s/it][round  33] per_acc=0.9436 glob_acc=0.7850 train_acc=0.9584 train_loss=0.160 kl(q_w||q)=nan
 rounds:  85%|████████▌ | 34/40 [11:24<02:07, 21.24s/it][round  34] per_acc=0.9366 glob_acc=0.7551 train_acc=0.9560 train_loss=0.158 kl(q_w||q)=nan
+rounds:  88%|████████▊ | 35/40 [11:48<01:50, 22.08s/it][round  35] per_acc=0.9461 glob_acc=0.7539 train_acc=0.9614 train_loss=0.155 kl(q_w||q)=nan
+rounds:  90%|█████████ | 36/40 [12:11<01:29, 22.33s/it][round  36] per_acc=0.9459 glob_acc=0.8078 train_acc=0.9590 train_loss=0.154 kl(q_w||q)=nan
+rounds:  92%|█████████▎| 37/40 [12:33<01:06, 22.23s/it][round  37] per_acc=0.9386 glob_acc=0.7579 train_acc=0.9578 train_loss=0.165 kl(q_w||q)=nan
+rounds:  95%|█████████▌| 38/40 [12:54<00:43, 21.76s/it][round  38] per_acc=0.9439 glob_acc=0.7965 train_acc=0.9580 train_loss=0.154 kl(q_w||q)=nan
+rounds:  98%|█████████▊| 39/40 [13:14<00:21, 21.31s/it][round  39] per_acc=0.9371 glob_acc=0.7707 train_acc=0.9452 train_loss=0.169 kl(q_w||q)=nan
+rounds: 100%|██████████| 40/40 [13:34<00:00, 21.03s/it]rounds: 100%|██████████| 40/40 [13:34<00:00, 20.37s/it]
+[round  40] per_acc=0.9469 glob_acc=0.9421 train_acc=0.9564 train_loss=0.168 kl(q_w||q)=nan
+[server] results -> results/FMnist_pfedbayes_frac0.5_z10.0_u10_b100_seed1.h5
+done -> results/FMnist_pfedbayes_frac0.5_z10.0_u10_b100_seed1.h5
