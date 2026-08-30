@@ -1,8 +1,0 @@
-[plot] results/fig_accuracy_Mnist.png
-[plot] results/fig_kl_Mnist.png
-method                         per_acc  glob_acc   rounds@0.80
---------------------------------------------------------------
-CoreSet-PFedBayes (k=50%)       0.9832    0.9847             1
-PFedBayes (full)                0.9724    0.9702             1
-RandomSubset (50%)              0.9669    0.9667             1
-[plot] results/summary_Mnist.txt
