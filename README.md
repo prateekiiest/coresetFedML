@@ -179,19 +179,6 @@ regression. Pass `--prices2018 <path>` to point elsewhere.
 
 ------------------------------
 
-## Method ↔ paper
-
-* `P_{θ,w}(Dⁱ)` is the Bayesian-coreset weighted likelihood
-  `log P_{θ,w}(Dⁱ) = Σ_j w_j log p_θ(Dⁱ_j)`, `w ≥ 0`, `‖w‖₀ ≤ n_k`. Eq. 9 as
-  printed omits the `w_j` inside the sum.
-* The coreset weights are optimised by an **alternating** scheme (Algorithm 1):
-  A-IHT II on the quadratic coreset-matching term, with the posteriors held
-  fixed; `KL(q_w ‖ q)` is the diagnostic (Fig. 3a) and the outer stop criterion.
-  The bilevel implicit gradient of Proposition 1 is the justification, not the
-  practical update.
-* One `ClientUpdate` (R local reparam-SGD rounds) per A-IHT invocation; a few
-  outer `(ClientUpdate → A-IHT)` steps per communication round.
-
 ### Scope
 
 * `CoreSet-PFedBayes`, `PFedBayes` and `RandomSubset` are implemented; the other
